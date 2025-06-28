@@ -2,13 +2,39 @@ import assert from 'assert';
 import { getMonthlyExpenses, getMonthlyIncome, getTagSpendings } from '../frontend/data/sampleData.js';
 
 /**
- * Simple tests for sample data generation functions.
+ * Simple tests for data retrieval functions using mocked fetch.
  */
-function run() {
-  assert.strictEqual(getMonthlyExpenses().length, 12, 'Expenses should have 12 entries');
-  assert.strictEqual(getMonthlyIncome().length, 12, 'Income should have 12 entries');
-  const tags = getTagSpendings();
-  assert.ok(Array.isArray(tags) && tags.length > 0, 'Tag data should be non-empty');
+async function run() {
+  const expenseData = [
+    { amount: 100, description: 'Food', created_at: 1705276800 },
+    { amount: 200, description: 'Rent', created_at: 1707523200 }
+  ];
+  const incomeData = [
+    { amount: 300, description: 'salary', created_at: 1704412800 },
+    { amount: 200, description: 'bonus', created_at: 1710892800 }
+  ];
+  global.fetch = async (url) => {
+    return {
+      async json() {
+        if (url === '/expenses') return expenseData;
+        if (url === '/incomes') return incomeData;
+        throw new Error('unknown url');
+      }
+    };
+  };
+
+  const expenses = await getMonthlyExpenses();
+  assert.strictEqual(expenses.length, 12, 'Expenses array should have 12 months');
+  assert.strictEqual(expenses[0], 100);
+  assert.strictEqual(expenses[1], 200);
+
+  const incomes = await getMonthlyIncome();
+  assert.strictEqual(incomes[0], 300);
+  assert.strictEqual(incomes[2], 200);
+
+  const tags = await getTagSpendings();
+  assert.ok(Array.isArray(tags) && tags.length === 2, 'Tag data should contain two tags');
+
   console.log('All tests passed');
 }
 
