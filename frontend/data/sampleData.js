@@ -57,3 +57,25 @@ export async function getTagSpendings() {
   });
   return Object.entries(tagMap).map(([tag, amounts]) => ({ tag, amounts }));
 }
+
+/**
+ * Fetch expense and income records for the last six months.
+ * @returns {Promise<{expenses: object[], incomes: object[]}>} Recent records
+ */
+export async function getRecentRecords() {
+  const [expRes, incRes] = await Promise.all([
+    fetch('/expenses'),
+    fetch('/incomes')
+  ]);
+  const [expenses, incomes] = await Promise.all([
+    expRes.json(),
+    incRes.json()
+  ]);
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 5);
+  cutoff.setDate(1);
+  const cutoffTs = Math.floor(cutoff.getTime() / 1000);
+  const recentExpenses = expenses.filter((e) => e.created_at >= cutoffTs);
+  const recentIncomes = incomes.filter((i) => i.created_at >= cutoffTs);
+  return { expenses: recentExpenses, incomes: recentIncomes };
+}

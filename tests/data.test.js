@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { getMonthlyExpenses, getMonthlyIncome, getTagSpendings } from '../frontend/data/sampleData.js';
+import { getMonthlyExpenses, getMonthlyIncome, getTagSpendings, getRecentRecords } from '../frontend/data/sampleData.js';
 
 /**
  * Simple tests for data retrieval functions using mocked fetch.
@@ -34,6 +34,10 @@ async function run() {
 
   const tags = await getTagSpendings();
   assert.ok(Array.isArray(tags) && tags.length === 2, 'Tag data should contain two tags');
+
+  const recent = await getRecentRecords();
+  assert.ok(Array.isArray(recent.expenses), 'Recent expenses should be an array');
+  assert.ok(Array.isArray(recent.incomes), 'Recent incomes should be an array');
 
   console.log('All tests passed');
 }
