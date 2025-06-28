@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addExpense, getExpenses, addIncome, getIncomes } from './db.js';
+import { addExpense, getExpenses, addIncome, getIncomes, updateExpense } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +35,19 @@ const server = http.createServer((req, res) => {
       const data = JSON.parse(body || '{}');
       addExpense(Number(data.amount), data.description || '');
       res.statusCode = 201;
+      res.end('OK');
+    });
+    return;
+  }
+
+  if (req.url.startsWith('/expenses/') && req.method === 'PUT') {
+    const id = Number(req.url.split('/')[2]);
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const data = JSON.parse(body || '{}');
+      updateExpense(id, Number(data.amount), data.description || '');
+      res.statusCode = 200;
       res.end('OK');
     });
     return;

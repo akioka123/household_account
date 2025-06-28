@@ -50,6 +50,18 @@ export function getExpenses() {
 }
 
 /**
+ * Updates an existing expense record.
+ * @param {number} id - Expense identifier.
+ * @param {number} amount - New amount value.
+ * @param {string} description - Updated description text.
+ * @returns {void}
+ */
+export function updateExpense(id, amount, description) {
+  const stmt = db.prepare('UPDATE expenses SET amount = ?, description = ? WHERE id = ?');
+  stmt.run(amount, description, id);
+}
+
+/**
  * Inserts an income record.
  * @param {number} amount - Income amount.
  * @param {string} [description] - Optional description.
