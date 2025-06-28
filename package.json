@@ -4,10 +4,13 @@
   "description": "家計簿アプリ開発",
   "main": "server.js",
   "scripts": {
-    "test": "node tests/data.test.js"
+    "test": "node tests/data.test.js && node tests/db.test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "better-sqlite3": "^9.0.0"
+  }
 }
