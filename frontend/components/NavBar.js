@@ -7,6 +7,11 @@ export default function NavBar() {
   const container = document.createElement('div');
   container.className = 'nav-bar';
 
+  const homeLink = document.createElement('a');
+  homeLink.href = '#';
+  homeLink.textContent = 'ダッシュボード';
+  container.appendChild(homeLink);
+
   const expenseLink = document.createElement('a');
   expenseLink.href = '#expense';
   expenseLink.textContent = '支出登録';

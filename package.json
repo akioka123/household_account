@@ -4,7 +4,7 @@
   "description": "家計簿アプリ開発",
   "main": "server.js",
   "scripts": {
-    "test": "node tests/data.test.js && node tests/db.test.js"
+    "test": "node tests/data.test.js && node tests/db.test.js && node tests/expenseForm.test.js"
   },
   "keywords": [],
   "author": "",
@@ -12,5 +12,8 @@
   "type": "module",
   "dependencies": {
     "better-sqlite3": "^9.0.0"
+  },
+  "devDependencies": {
+    "jsdom": "^21.1.2"
   }
 }
