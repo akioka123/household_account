@@ -19,6 +19,12 @@ export default function NavBar() {
   expenseLink.className = 'text-blue-600 underline';
   container.appendChild(expenseLink);
 
+  const expenseListLink = document.createElement('a');
+  expenseListLink.href = '#expenses';
+  expenseListLink.textContent = '支出一覧';
+  expenseListLink.className = 'text-blue-600 underline';
+  container.appendChild(expenseListLink);
+
   const incomeLink = document.createElement('a');
   incomeLink.href = '#income';
   incomeLink.textContent = '収入登録';
