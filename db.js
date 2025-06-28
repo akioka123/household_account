@@ -68,3 +68,27 @@ export function addIncome(amount, description = '') {
 export function getIncomes() {
   return db.prepare('SELECT * FROM incomes').all();
 }
+
+/**
+ * Retrieves incomes for a specific month and year.
+ * @param {number} year - The year.
+ * @param {number} month - The month (1-12).
+ * @returns {object[]} List of income rows for the specified month.
+ */
+export function getIncomesByMonth(year, month) {
+  const startOfMonth = new Date(year, month - 1, 1).getTime() / 1000;
+  const endOfMonth = new Date(year, month, 0).getTime() / 1000;
+  return db.prepare('SELECT * FROM incomes WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC').all(startOfMonth, endOfMonth);
+}
+
+/**
+ * Updates an income record.
+ * @param {number} id - The ID of the income record to update.
+ * @param {number} amount - The new amount.
+ * @param {string} description - The new description.
+ * @returns {object} Run result information.
+ */
+export function updateIncome(id, amount, description) {
+  const stmt = db.prepare('UPDATE incomes SET amount = ?, description = ? WHERE id = ?');
+  return stmt.run(amount, description, id);
+}

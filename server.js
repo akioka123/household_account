@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addExpense, getExpenses, addIncome, getIncomes } from './db.js';
+import { addExpense, getExpenses, addIncome, getIncomes, getIncomesByMonth, updateIncome } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +48,39 @@ const server = http.createServer((req, res) => {
       addIncome(Number(data.amount), data.description || '');
       res.statusCode = 201;
       res.end('OK');
+    });
+    return;
+  }
+
+  if (req.url.startsWith('/incomes/month/') && req.method === 'GET') {
+    const parts = req.url.split('/');
+    const year = parseInt(parts[3]);
+    const month = parseInt(parts[4]);
+    if (!isNaN(year) && !isNaN(month)) {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(getIncomesByMonth(year, month)));
+    } else {
+      res.statusCode = 400;
+      res.end('Bad Request');
+    }
+    return;
+  }
+
+  if (req.url.startsWith('/incomes/') && req.method === 'PUT') {
+    const parts = req.url.split('/');
+    const id = parseInt(parts[2]);
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const data = JSON.parse(body || '{}');
+      if (!isNaN(id) && data.amount && data.description !== undefined) {
+        updateIncome(id, Number(data.amount), data.description);
+        res.statusCode = 200;
+        res.end('OK');
+      } else {
+        res.statusCode = 400;
+        res.end('Bad Request');
+      }
     });
     return;
   }
