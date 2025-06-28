@@ -4,9 +4,14 @@ import NavBar from './NavBar.js';
 
 /**
  * Dashboard screen rendering three line charts and navigation buttons.
+ * Data is fetched from the backend at runtime.
  * @module Dashboard
  */
-export default function Dashboard() {
+/**
+ * Renders the dashboard using data from the backend.
+ * @returns {Promise<HTMLDivElement>} Root element containing charts
+ */
+export default async function Dashboard() {
   const root = document.createElement('div');
   root.appendChild(NavBar());
 
@@ -19,13 +24,19 @@ export default function Dashboard() {
 
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  new LineChart(expenseCanvas, months, getMonthlyExpenses(), '支出', 'rgba(255, 99, 132, 1)');
-  new LineChart(incomeCanvas, months, getMonthlyIncome(), '収入', 'rgba(54, 162, 235, 1)');
+  const [expenses, income, tagData] = await Promise.all([
+    getMonthlyExpenses(),
+    getMonthlyIncome(),
+    getTagSpendings()
+  ]);
 
-  const tagData = getTagSpendings();
+  new LineChart(expenseCanvas, months, expenses, '支出', 'rgba(255, 99, 132, 1)');
+  new LineChart(incomeCanvas, months, income, '収入', 'rgba(54, 162, 235, 1)');
+
   tagData.forEach((d, index) => {
     new LineChart(tagCanvas, months, d.amounts, d.tag, `hsl(${index * 60}, 70%, 50%)`);
   });
 
   return root;
 }
+
