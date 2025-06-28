@@ -14,7 +14,7 @@ import NavBar from './NavBar.js';
 export default async function Dashboard() {
   const root = document.createElement('div');
   root.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
-  root.appendChild(NavBar());
+  root.appendChild(NavBar('ダッシュボード'));
 
   const expenseCanvas = document.createElement('canvas');
   expenseCanvas.className = 'w-full h-64';
@@ -23,13 +23,31 @@ export default async function Dashboard() {
   const tagCanvas = document.createElement('canvas');
   tagCanvas.className = 'w-full h-64';
   const chartContainer = document.createElement('div');
-  chartContainer.className = 'w-full max-w-3xl grid grid-cols-1 gap-4';
+  chartContainer.className = 'grid grid-cols-1 gap-4';
   chartContainer.appendChild(expenseCanvas);
   chartContainer.appendChild(incomeCanvas);
   chartContainer.appendChild(tagCanvas);
-  root.appendChild(chartContainer);
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4';
+  wrapper.appendChild(chartContainer);
 
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const halfYearContainer = document.createElement('div');
+  halfYearContainer.className = 'grid grid-cols-1 gap-4';
+
+  const createHalfTable = (title, start, expenses, income) => {
+    const table = document.createElement('table');
+    table.className = 'min-w-full text-sm text-left border';
+    table.innerHTML = `<caption class="font-bold">${title}</caption><thead><tr><th class="border px-2">月</th><th class="border px-2">支出</th><th class="border px-2">収入</th></tr></thead><tbody></tbody>`;
+    for (let i = start; i < start + 6; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="border px-2">${months[i]}</td><td class="border px-2 text-right">${expenses[i]}</td><td class="border px-2 text-right">${income[i]}</td>`;
+      table.querySelector('tbody').appendChild(tr);
+    }
+    return table;
+  };
 
   const [expenses, income, tagData] = await Promise.all([
     getMonthlyExpenses(),
@@ -43,6 +61,11 @@ export default async function Dashboard() {
   tagData.forEach((d, index) => {
     new LineChart(tagCanvas, months, d.amounts, d.tag, `hsl(${index * 60}, 70%, 50%)`);
   });
+
+  halfYearContainer.appendChild(createHalfTable('前半6ヶ月', 0, expenses, income));
+  halfYearContainer.appendChild(createHalfTable('後半6ヶ月', 6, expenses, income));
+  wrapper.appendChild(halfYearContainer);
+  root.appendChild(wrapper);
 
   const recent = await getRecentRecords();
   const listContainer = document.createElement('div');

@@ -1,3 +1,5 @@
+import NavBar from './NavBar.js';
+
 /**
  * Expense page component providing registration and list editing in one screen.
  * The layout mirrors the income screen.
@@ -6,6 +8,7 @@
 export default function ExpenseForm() {
   const container = document.createElement('div');
   container.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
+  container.appendChild(NavBar('支出登録'));
 
   // Month selection controls
   const monthSelectContainer = document.createElement('div');
@@ -20,7 +23,9 @@ export default function ExpenseForm() {
   expenseListContainer.className = 'w-full max-w-sm mt-4';
   container.appendChild(expenseListContainer);
 
+  let renderSeq = 0;
   const renderExpenseList = async (year, month) => {
+    const seq = ++renderSeq;
     expenseListContainer.innerHTML = '';
     const res = await fetch('/expenses');
     const expenses = await res.json();
@@ -49,6 +54,7 @@ export default function ExpenseForm() {
       `;
       ul.appendChild(li);
     });
+    if (seq !== renderSeq) return;
     expenseListContainer.appendChild(ul);
 
     ul.querySelectorAll('.edit-btn').forEach((button) => {
