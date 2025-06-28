@@ -1,3 +1,5 @@
+import NavBar from './NavBar.js';
+
 /**
  * Income input form component for registering incomes via the backend API.
  * @module IncomeForm
@@ -5,6 +7,7 @@
 export default function IncomeForm() {
   const container = document.createElement('div');
   container.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
+  container.appendChild(NavBar('収入登録'));
 
   // Month selection
   const monthSelectContainer = document.createElement('div');
