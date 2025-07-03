@@ -1,6 +1,7 @@
 import LineChart from './LineChart.js';
 import { getMonthlyExpenses, getMonthlyIncome, getTagSpendings, getRecentRecords } from '../data/sampleData.js';
 import NavBar from './NavBar.js';
+import { formatAmount } from '../utils/format.js';
 
 /**
  * Dashboard screen rendering three line charts and navigation buttons.
@@ -43,7 +44,7 @@ export default async function Dashboard() {
     table.innerHTML = `<caption class="font-bold">${title}</caption><thead><tr><th class="border px-2">月</th><th class="border px-2">支出</th><th class="border px-2">収入</th></tr></thead><tbody></tbody>`;
     for (let i = start; i < start + 6; i++) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="border px-2">${months[i]}</td><td class="border px-2 text-right">${expenses[i]}</td><td class="border px-2 text-right">${income[i]}</td>`;
+      tr.innerHTML = `<td class="border px-2">${months[i]}</td><td class="border px-2 text-right">${formatAmount(expenses[i])}</td><td class="border px-2 text-right">${formatAmount(income[i])}</td>`;
       table.querySelector('tbody').appendChild(tr);
     }
     return table;
@@ -76,7 +77,7 @@ export default async function Dashboard() {
   expTable.innerHTML = '<caption class="font-bold">最近6ヶ月の支出</caption><thead><tr><th class="border px-2">日付</th><th class="border px-2">内容</th><th class="border px-2">金額</th></tr></thead><tbody></tbody>';
   recent.expenses.forEach((e) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="border px-2">${new Date(e.created_at * 1000).toLocaleDateString()}</td><td class="border px-2">${e.description || ''}</td><td class="border px-2 text-right">${e.amount}</td>`;
+    tr.innerHTML = `<td class="border px-2">${new Date(e.created_at * 1000).toLocaleDateString()}</td><td class="border px-2">${e.description || ''}</td><td class="border px-2 text-right">${formatAmount(e.amount)}</td>`;
     expTable.querySelector('tbody').appendChild(tr);
   });
 
@@ -85,7 +86,7 @@ export default async function Dashboard() {
   incTable.innerHTML = '<caption class="font-bold">最近6ヶ月の収入</caption><thead><tr><th class="border px-2">日付</th><th class="border px-2">内容</th><th class="border px-2">金額</th></tr></thead><tbody></tbody>';
   recent.incomes.forEach((i) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="border px-2">${new Date(i.created_at * 1000).toLocaleDateString()}</td><td class="border px-2">${i.description || ''}</td><td class="border px-2 text-right">${i.amount}</td>`;
+    tr.innerHTML = `<td class="border px-2">${new Date(i.created_at * 1000).toLocaleDateString()}</td><td class="border px-2">${i.description || ''}</td><td class="border px-2 text-right">${formatAmount(i.amount)}</td>`;
     incTable.querySelector('tbody').appendChild(tr);
   });
 
