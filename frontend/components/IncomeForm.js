@@ -1,4 +1,5 @@
 import NavBar from './NavBar.js';
+import { formatAmount } from '../utils/format.js';
 
 /**
  * Income input form component for registering incomes via the backend API.
@@ -22,6 +23,9 @@ export default function IncomeForm() {
   incomeListContainer.className = 'w-full max-w-sm mt-4';
   container.appendChild(incomeListContainer);
 
+  let renderPromise = Promise.resolve();
+  container.renderPromise = renderPromise;
+
   const renderIncomeList = async (year, month) => {
     incomeListContainer.innerHTML = ''; // Clear previous list
     const response = await fetch(`/incomes/month/${year}/${month}`);
@@ -39,7 +43,7 @@ export default function IncomeForm() {
       li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
       li.innerHTML = `
         <div>
-          <p>金額: ${income.amount}</p>
+          <p>金額: ${formatAmount(income.amount)}</p>
           <p>内容: ${income.description}</p>
           <p>日付: ${new Date(income.created_at * 1000).toLocaleDateString()}</p>
         </div>
@@ -107,11 +111,18 @@ export default function IncomeForm() {
   }
 
   // Event listeners for month/year change
-  yearSelect.addEventListener('change', () => renderIncomeList(yearSelect.value, monthSelect.value));
-  monthSelect.addEventListener('change', () => renderIncomeList(yearSelect.value, monthSelect.value));
+  yearSelect.addEventListener('change', () => {
+    renderPromise = renderPromise.then(() => renderIncomeList(yearSelect.value, monthSelect.value));
+    container.renderPromise = renderPromise;
+  });
+  monthSelect.addEventListener('change', () => {
+    renderPromise = renderPromise.then(() => renderIncomeList(yearSelect.value, monthSelect.value));
+    container.renderPromise = renderPromise;
+  });
 
   // Initial render
-  renderIncomeList(currentYear, currentMonth);
+  renderPromise = renderIncomeList(currentYear, currentMonth);
+  container.renderPromise = renderPromise;
 
   const form = document.createElement('form');
   form.className = 'flex flex-col space-y-2 w-full max-w-sm mt-8';

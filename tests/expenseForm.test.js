@@ -35,8 +35,9 @@ async function run() {
   monthSelect.value = '5';
   yearSelect.dispatchEvent(new dom.window.Event('change'));
   monthSelect.dispatchEvent(new dom.window.Event('change'));
-  await new Promise(res => setImmediate(res));
+  await el.renderPromise;
   const items = el.querySelectorAll('ul li');
+  console.log('items len', items.length);
   assert.strictEqual(items.length, 2, 'Should show two records for selected month');
 
   const form = el.querySelector('form');
@@ -48,7 +49,8 @@ async function run() {
   assert.ok(postCalled, 'POST should be called when submitting new expense');
 
   items[0].querySelector('.edit-btn').dispatchEvent(new dom.window.Event('click'));
-  await new Promise(res => setImmediate(res));
+  await new Promise(res => setTimeout(res, 50));
+  console.log('has save', !!el.querySelector('.save-btn'));
   el.querySelector('.save-btn').dispatchEvent(new dom.window.Event('click'));
   await new Promise(res => setImmediate(res));
   assert.ok(putCalled, 'PUT should be called when saving edit');

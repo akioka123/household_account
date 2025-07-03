@@ -1,4 +1,5 @@
 import NavBar from './NavBar.js';
+import { formatAmount } from '../utils/format.js';
 
 /**
  * Expense page component providing registration and list editing in one screen.
@@ -24,6 +25,8 @@ export default function ExpenseForm() {
   container.appendChild(expenseListContainer);
 
   let renderSeq = 0;
+  let renderPromise = Promise.resolve();
+  container.renderPromise = renderPromise;
   const renderExpenseList = async (year, month) => {
     const seq = ++renderSeq;
     expenseListContainer.innerHTML = '';
@@ -46,7 +49,7 @@ export default function ExpenseForm() {
       li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
       li.innerHTML = `
         <div>
-          <p>金額: ${expense.amount}</p>
+          <p>金額: ${formatAmount(expense.amount)}</p>
           <p>内容: ${expense.description}</p>
           <p>日付: ${new Date(expense.created_at * 1000).toLocaleDateString()}</p>
         </div>
@@ -110,11 +113,18 @@ export default function ExpenseForm() {
     monthSelect.appendChild(option);
   }
 
-  yearSelect.addEventListener('change', () => renderExpenseList(yearSelect.value, monthSelect.value));
-  monthSelect.addEventListener('change', () => renderExpenseList(yearSelect.value, monthSelect.value));
+  yearSelect.addEventListener('change', () => {
+    renderPromise = renderPromise.then(() => renderExpenseList(yearSelect.value, monthSelect.value));
+    container.renderPromise = renderPromise;
+  });
+  monthSelect.addEventListener('change', () => {
+    renderPromise = renderPromise.then(() => renderExpenseList(yearSelect.value, monthSelect.value));
+    container.renderPromise = renderPromise;
+  });
 
   // Initial render of expense list
-  renderExpenseList(currentYear, currentMonth);
+  renderPromise = renderExpenseList(currentYear, currentMonth);
+  container.renderPromise = renderPromise;
 
   const form = document.createElement('form');
   form.className = 'flex flex-col space-y-2 w-full max-w-sm mt-8';
