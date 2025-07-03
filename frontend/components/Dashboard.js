@@ -17,17 +17,35 @@ export default async function Dashboard() {
   root.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
   root.appendChild(NavBar('ダッシュボード'));
 
+  // Create selector to unify y-axis scale across charts
+  const scaleSelect = document.createElement('select');
+  [100000, 500000, 1000000].forEach((v) => {
+    const option = document.createElement('option');
+    option.value = v;
+    option.textContent = v.toLocaleString();
+    scaleSelect.appendChild(option);
+  });
+  scaleSelect.className = 'border p-1 mb-2 self-end';
+  root.appendChild(scaleSelect);
+
   const expenseCanvas = document.createElement('canvas');
   expenseCanvas.className = 'w-full h-64';
   const incomeCanvas = document.createElement('canvas');
   incomeCanvas.className = 'w-full h-64';
   const tagCanvas = document.createElement('canvas');
   tagCanvas.className = 'w-full h-64';
+
+  // Dropdown to switch displayed tag in the bottom chart
+  const tagSelect = document.createElement('select');
+  tagSelect.className = 'border p-1 mb-2 self-end';
+
   const chartContainer = document.createElement('div');
   chartContainer.className = 'grid grid-cols-1 gap-4';
   chartContainer.appendChild(expenseCanvas);
   chartContainer.appendChild(incomeCanvas);
   chartContainer.appendChild(tagCanvas);
+
+  root.appendChild(tagSelect);
 
   const wrapper = document.createElement('div');
   wrapper.className = 'w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4';
@@ -56,12 +74,38 @@ export default async function Dashboard() {
     getTagSpendings()
   ]);
 
-  new LineChart(expenseCanvas, months, expenses, '支出', 'rgba(255, 99, 132, 1)');
-  new LineChart(incomeCanvas, months, income, '収入', 'rgba(54, 162, 235, 1)');
+  const expenseChart = new LineChart(
+    expenseCanvas,
+    months,
+    expenses,
+    '支出',
+    'rgba(255, 99, 132, 1)',
+    Number(scaleSelect.value)
+  );
+  const incomeChart = new LineChart(
+    incomeCanvas,
+    months,
+    income,
+    '収入',
+    'rgba(54, 162, 235, 1)',
+    Number(scaleSelect.value)
+  );
 
-  tagData.forEach((d, index) => {
-    new LineChart(tagCanvas, months, d.amounts, d.tag, `hsl(${index * 60}, 70%, 50%)`);
+  tagData.forEach((d, idx) => {
+    const option = document.createElement('option');
+    option.value = idx;
+    option.textContent = d.tag;
+    tagSelect.appendChild(option);
   });
+
+  const tagChart = new LineChart(
+    tagCanvas,
+    months,
+    tagData[0]?.amounts || [],
+    tagData[0]?.tag || '',
+    'rgba(75, 192, 192, 1)',
+    Number(scaleSelect.value)
+  );
 
   halfYearContainer.appendChild(createHalfTable('前半6ヶ月', 0, expenses, income));
   halfYearContainer.appendChild(createHalfTable('後半6ヶ月', 6, expenses, income));
@@ -93,6 +137,21 @@ export default async function Dashboard() {
   listContainer.appendChild(expTable);
   listContainer.appendChild(incTable);
   root.appendChild(listContainer);
+
+  // update all charts when scale is changed
+  scaleSelect.addEventListener('change', () => {
+    const max = Number(scaleSelect.value);
+    expenseChart.setMax(max);
+    incomeChart.setMax(max);
+    tagChart.setMax(max);
+  });
+
+  // switch tag data in bottom chart
+  tagSelect.addEventListener('change', () => {
+    const idx = Number(tagSelect.value);
+    const d = tagData[idx];
+    tagChart.updateData(months, d.amounts, d.tag);
+  });
 
   return root;
 }

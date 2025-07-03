@@ -48,10 +48,11 @@ async function run() {
   await new Promise(res => setImmediate(res));
   assert.ok(postCalled, 'POST should be called when submitting new expense');
 
-  items[0].querySelector('.edit-btn').dispatchEvent(new dom.window.Event('click'));
-  await new Promise(res => setTimeout(res, 50));
-  console.log('has save', !!el.querySelector('.save-btn'));
-  el.querySelector('.save-btn').dispatchEvent(new dom.window.Event('click'));
+  // trigger edit mode using the DOM API for better JSDOM compatibility
+  items[0].querySelector('.edit-btn').click();
+  await new Promise(res => setImmediate(res));
+  console.log('has save', !!items[0].querySelector('.save-btn'));
+  items[0].querySelector('.save-btn').dispatchEvent(new dom.window.Event('click'));
   await new Promise(res => setImmediate(res));
   assert.ok(putCalled, 'PUT should be called when saving edit');
 

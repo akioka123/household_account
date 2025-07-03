@@ -62,6 +62,7 @@ export default function ExpenseForm() {
 
     ul.querySelectorAll('.edit-btn').forEach((button) => {
       button.addEventListener('click', (e) => {
+        renderSeq++; // cancel pending renders to keep edit form visible
         const id = e.target.dataset.id;
         const currentAmount = e.target.dataset.amount;
         const currentDescription = e.target.dataset.description;
