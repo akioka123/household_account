@@ -11,24 +11,46 @@ export default function ExpenseForm() {
   container.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
   container.appendChild(NavBar('支出登録'));
 
-  // Month selection controls
-  const monthSelectContainer = document.createElement('div');
-  monthSelectContainer.className = 'mb-4';
-  const yearSelect = document.createElement('select');
-  const monthSelect = document.createElement('select');
-  monthSelectContainer.appendChild(yearSelect);
-  monthSelectContainer.appendChild(monthSelect);
-  container.appendChild(monthSelectContainer);
+  // Month selection using a calendar style input
+  const now = new Date();
+  const monthInput = document.createElement('input');
+  monthInput.type = 'month';
+  monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  monthInput.className = 'border p-2 mb-4';
+  container.appendChild(monthInput);
+
+  const form = document.createElement('form');
+  form.className = 'flex flex-row space-x-2 w-full max-w-5xl mb-4';
+  const amountInput = document.createElement('input');
+  amountInput.type = 'number';
+  amountInput.placeholder = '金額';
+  amountInput.className = 'border p-2 flex-1';
+
+  const descInput = document.createElement('input');
+  descInput.type = 'text';
+  descInput.placeholder = '内容';
+  descInput.className = 'border p-2 flex-1';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.textContent = '登録';
+  submitBtn.className = 'bg-blue-600 text-white p-2';
+
+  form.appendChild(amountInput);
+  form.appendChild(descInput);
+  form.appendChild(submitBtn);
+  container.appendChild(form);
 
   const expenseListContainer = document.createElement('div');
-  expenseListContainer.className = 'w-full max-w-sm mt-4';
+  expenseListContainer.className = 'w-full max-w-5xl mt-4';
   container.appendChild(expenseListContainer);
 
   let renderSeq = 0;
   let renderPromise = Promise.resolve();
   container.renderPromise = renderPromise;
-  const renderExpenseList = async (year, month) => {
+  const renderExpenseList = async (ym) => {
     const seq = ++renderSeq;
+    const [year, month] = ym.split('-').map(Number);
     expenseListContainer.innerHTML = '';
     const res = await fetch('/expenses');
     const expenses = await res.json();
@@ -43,8 +65,8 @@ export default function ExpenseForm() {
     }
 
     const ul = document.createElement('ul');
-    ul.className = 'space-y-2';
-    filtered.forEach((expense) => {
+    ul.className = 'grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+    filtered.slice(0, 25).forEach((expense) => {
       const li = document.createElement('li');
       li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
       li.innerHTML = `
@@ -86,67 +108,25 @@ export default function ExpenseForm() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: Number(newAmount), description: newDescription })
           });
-          renderExpenseList(yearSelect.value, monthSelect.value);
+          renderExpenseList(monthInput.value);
         });
 
         listItem.querySelector('.cancel-btn').addEventListener('click', () => {
-          renderExpenseList(yearSelect.value, monthSelect.value);
+          renderExpenseList(monthInput.value);
         });
       });
     });
   };
 
-  // Populate year/month drop-downs
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-  for (let i = currentYear - 2; i <= currentYear + 1; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = i;
-    if (i === currentYear) option.selected = true;
-    yearSelect.appendChild(option);
-  }
-  for (let i = 1; i <= 12; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = i;
-    if (i === currentMonth) option.selected = true;
-    monthSelect.appendChild(option);
-  }
-
-  yearSelect.addEventListener('change', () => {
-    renderPromise = renderPromise.then(() => renderExpenseList(yearSelect.value, monthSelect.value));
-    container.renderPromise = renderPromise;
-  });
-  monthSelect.addEventListener('change', () => {
-    renderPromise = renderPromise.then(() => renderExpenseList(yearSelect.value, monthSelect.value));
+  // Update list when month input changes
+  monthInput.addEventListener('change', () => {
+    renderPromise = renderPromise.then(() => renderExpenseList(monthInput.value));
     container.renderPromise = renderPromise;
   });
 
   // Initial render of expense list
-  renderPromise = renderExpenseList(currentYear, currentMonth);
+  renderPromise = renderExpenseList(monthInput.value);
   container.renderPromise = renderPromise;
-
-  const form = document.createElement('form');
-  form.className = 'flex flex-col space-y-2 w-full max-w-sm mt-8';
-  const amountInput = document.createElement('input');
-  amountInput.type = 'number';
-  amountInput.placeholder = '金額';
-  amountInput.className = 'border p-2';
-
-  const descInput = document.createElement('input');
-  descInput.type = 'text';
-  descInput.placeholder = '内容';
-  descInput.className = 'border p-2';
-
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'submit';
-  submitBtn.textContent = '登録';
-  submitBtn.className = 'bg-blue-600 text-white p-2';
-
-  form.appendChild(amountInput);
-  form.appendChild(descInput);
-  form.appendChild(submitBtn);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -159,10 +139,9 @@ export default function ExpenseForm() {
     });
     amountInput.value = '';
     descInput.value = '';
-    renderExpenseList(yearSelect.value, monthSelect.value);
+    renderExpenseList(monthInput.value);
   });
 
-  container.appendChild(form);
 
   const backLink = document.createElement('a');
   backLink.href = '#';

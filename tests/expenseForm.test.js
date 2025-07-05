@@ -30,11 +30,9 @@ async function run() {
   dom.window.document.body.appendChild(el);
   await new Promise(res => setImmediate(res));
 
-  const [yearSelect, monthSelect] = el.querySelectorAll('select');
-  yearSelect.value = '2024';
-  monthSelect.value = '5';
-  yearSelect.dispatchEvent(new dom.window.Event('change'));
-  monthSelect.dispatchEvent(new dom.window.Event('change'));
+  const monthInput = el.querySelector('input[type="month"]');
+  monthInput.value = '2024-05';
+  monthInput.dispatchEvent(new dom.window.Event('change'));
   await el.renderPromise;
   const items = el.querySelectorAll('ul li');
   console.log('items len', items.length);

@@ -10,24 +10,46 @@ export default function IncomeForm() {
   container.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
   container.appendChild(NavBar('収入登録'));
 
-  // Month selection
-  const monthSelectContainer = document.createElement('div');
-  monthSelectContainer.className = 'mb-4';
-  const yearSelect = document.createElement('select');
-  const monthSelect = document.createElement('select');
-  monthSelectContainer.appendChild(yearSelect);
-  monthSelectContainer.appendChild(monthSelect);
-  container.appendChild(monthSelectContainer);
+  // Month selection using calendar component
+  const now = new Date();
+  const monthInput = document.createElement('input');
+  monthInput.type = 'month';
+  monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  monthInput.className = 'border p-2 mb-4';
+  container.appendChild(monthInput);
+
+  const form = document.createElement('form');
+  form.className = 'flex flex-row space-x-2 w-full max-w-5xl mb-4';
+  const amountInput = document.createElement('input');
+  amountInput.type = 'number';
+  amountInput.placeholder = '金額';
+  amountInput.className = 'border p-2 flex-1';
+
+  const descInput = document.createElement('input');
+  descInput.type = 'text';
+  descInput.placeholder = '内容';
+  descInput.className = 'border p-2 flex-1';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.textContent = '登録';
+  submitBtn.className = 'bg-blue-600 text-white p-2';
+
+  form.appendChild(amountInput);
+  form.appendChild(descInput);
+  form.appendChild(submitBtn);
+  container.appendChild(form);
 
   const incomeListContainer = document.createElement('div');
-  incomeListContainer.className = 'w-full max-w-sm mt-4';
+  incomeListContainer.className = 'w-full max-w-5xl mt-4';
   container.appendChild(incomeListContainer);
 
   let renderPromise = Promise.resolve();
   container.renderPromise = renderPromise;
 
-  const renderIncomeList = async (year, month) => {
+  const renderIncomeList = async (ym) => {
     incomeListContainer.innerHTML = ''; // Clear previous list
+    const [year, month] = ym.split('-').map(Number);
     const response = await fetch(`/incomes/month/${year}/${month}`);
     const incomes = await response.json();
 
@@ -37,8 +59,8 @@ export default function IncomeForm() {
     }
 
     const ul = document.createElement('ul');
-    ul.className = 'space-y-2';
-    incomes.forEach(income => {
+    ul.className = 'grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+    incomes.slice(0, 25).forEach(income => {
       const li = document.createElement('li');
       li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
       li.innerHTML = `
@@ -80,70 +102,25 @@ export default function IncomeForm() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: Number(newAmount), description: newDescription })
           });
-          renderIncomeList(yearSelect.value, monthSelect.value); // Re-render after save
+          renderIncomeList(monthInput.value); // Re-render after save
         });
 
         listItem.querySelector('.cancel-btn').addEventListener('click', () => {
-          renderIncomeList(yearSelect.value, monthSelect.value); // Re-render to revert changes
+          renderIncomeList(monthInput.value); // Re-render to revert changes
         });
       });
     });
   };
 
-  // Populate year and month dropdowns
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1; // Month is 0-indexed
-
-  for (let i = currentYear - 2; i <= currentYear + 1; i++) { // Current year +/- 2 years
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = i;
-    if (i === currentYear) option.selected = true;
-    yearSelect.appendChild(option);
-  }
-
-  for (let i = 1; i <= 12; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = i;
-    if (i === currentMonth) option.selected = true;
-    monthSelect.appendChild(option);
-  }
-
-  // Event listeners for month/year change
-  yearSelect.addEventListener('change', () => {
-    renderPromise = renderPromise.then(() => renderIncomeList(yearSelect.value, monthSelect.value));
-    container.renderPromise = renderPromise;
-  });
-  monthSelect.addEventListener('change', () => {
-    renderPromise = renderPromise.then(() => renderIncomeList(yearSelect.value, monthSelect.value));
+  // Update list when month input changes
+  monthInput.addEventListener('change', () => {
+    renderPromise = renderPromise.then(() => renderIncomeList(monthInput.value));
     container.renderPromise = renderPromise;
   });
 
   // Initial render
-  renderPromise = renderIncomeList(currentYear, currentMonth);
+  renderPromise = renderIncomeList(monthInput.value);
   container.renderPromise = renderPromise;
-
-  const form = document.createElement('form');
-  form.className = 'flex flex-col space-y-2 w-full max-w-sm mt-8';
-  const amountInput = document.createElement('input');
-  amountInput.type = 'number';
-  amountInput.placeholder = '金額';
-  amountInput.className = 'border p-2';
-
-  const descInput = document.createElement('input');
-  descInput.type = 'text';
-  descInput.placeholder = '内容';
-  descInput.className = 'border p-2';
-
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'submit';
-  submitBtn.textContent = '登録';
-  submitBtn.className = 'bg-blue-600 text-white p-2';
-
-  form.appendChild(amountInput);
-  form.appendChild(descInput);
-  form.appendChild(submitBtn);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -156,10 +133,9 @@ export default function IncomeForm() {
     });
     amountInput.value = '';
     descInput.value = '';
-    renderIncomeList(yearSelect.value, monthSelect.value); // Re-render after new income added
+    renderIncomeList(monthInput.value); // Re-render after new income added
   });
 
-  container.appendChild(form);
 
   const backLink = document.createElement('a');
   backLink.href = '#';
