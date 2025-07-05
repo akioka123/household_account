@@ -53,18 +53,36 @@ export default async function Dashboard() {
   wrapper.className = 'w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4';
   wrapper.appendChild(chartContainer);
 
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = [
+    '1月','2月','3月','4月','5月','6月',
+    '7月','8月','9月','10月','11月','12月'
+  ];
 
-  const halfYearContainer = document.createElement('div');
-  halfYearContainer.className = 'grid grid-cols-1 gap-4';
+  const yearInput = document.createElement('input');
+  yearInput.type = 'month';
+  yearInput.className = 'border p-1 mb-2 self-end';
+  yearInput.value = `${new Date().getFullYear()}-01`;
 
-  const createHalfTable = (title, start, expenses, income) => {
+  const yearlyContainer = document.createElement('div');
+  yearlyContainer.className = 'grid grid-cols-1 gap-4';
+
+  /**
+   * Create a summary table for one year.
+   *
+   * @param {number} year - The target year.
+   * @param {number[]} expenses - Monthly expense amounts.
+   * @param {number[]} income - Monthly income amounts.
+   * @returns {HTMLTableElement} Rendered table element.
+   */
+  const createYearTable = (year, expenses, income) => {
     const table = document.createElement('table');
     table.className = 'min-w-full text-sm text-left border';
-    table.innerHTML = `<caption class="font-bold">${title}</caption><thead><tr><th class="border px-2">月</th><th class="border px-2">支出</th><th class="border px-2">収入</th></tr></thead><tbody></tbody>`;
-    for (let i = start; i < start + 6; i++) {
+    table.innerHTML = `<caption class="font-bold">${year}年</caption><thead><tr><th class="border px-2">月</th><th class="border px-2">収入</th><th class="border px-2">支出</th><th class="border px-2">損益</th></tr></thead><tbody></tbody>`;
+    for (let i = 0; i < 12; i++) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="border px-2">${months[i]}</td><td class="border px-2 text-right">${formatAmount(expenses[i])}</td><td class="border px-2 text-right">${formatAmount(income[i])}</td>`;
+      const diff = income[i] - expenses[i];
+      const diffClass = diff < 0 ? ' text-red-600' : '';
+      tr.innerHTML = `<td class="border px-2">${months[i]}</td><td class="border px-2 text-right">${formatAmount(income[i])}</td><td class="border px-2 text-right">${formatAmount(expenses[i])}</td><td class="border px-2 text-right${diffClass}">${formatAmount(diff)}</td>`;
       table.querySelector('tbody').appendChild(tr);
     }
     return table;
@@ -109,9 +127,9 @@ export default async function Dashboard() {
     Number(scaleSelect.value)
   );
 
-  halfYearContainer.appendChild(createHalfTable('前半6ヶ月', 0, expenses, income));
-  halfYearContainer.appendChild(createHalfTable('後半6ヶ月', 6, expenses, income));
-  wrapper.appendChild(halfYearContainer);
+  yearlyContainer.appendChild(createYearTable(new Date().getFullYear(), expenses, income));
+  wrapper.appendChild(yearInput);
+  wrapper.appendChild(yearlyContainer);
   root.appendChild(wrapper);
 
   const recent = await getRecentRecords();
@@ -153,6 +171,17 @@ export default async function Dashboard() {
     const idx = Number(tagSelect.value);
     const d = tagData[idx];
     tagChart.updateData(months, d.amounts, d.tag);
+  });
+
+  // reload yearly summary when year is changed
+  yearInput.addEventListener('change', async () => {
+    const year = new Date(yearInput.value).getFullYear();
+    const [exp, inc] = await Promise.all([
+      getMonthlyExpenses(year),
+      getMonthlyIncome(year)
+    ]);
+    yearlyContainer.innerHTML = '';
+    yearlyContainer.appendChild(createYearTable(year, exp, inc));
   });
 
   return root;

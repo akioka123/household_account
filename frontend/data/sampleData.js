@@ -8,7 +8,14 @@
  * @param {Array<{amount:number,created_at:number}>} items - Records to aggregate
  * @returns {number[]} Amount totals per month index (0-11)
  */
-function groupByMonth(items) {
+/**
+ * Aggregate amounts for a given year by month.
+ *
+ * @param {Array<{amount:number,created_at:number}>} items - Records to aggregate.
+ * @param {number} year - Target year for aggregation.
+ * @returns {number[]} Amount totals per month index (0-11).
+ */
+function groupByMonth(items, year) {
   const result = Array(12).fill(0);
   items.forEach((it) => {
     const [y, m] = (it.target_month || new Date(it.created_at * 1000).toISOString().slice(0,7)).split('-').map(Number);
@@ -22,31 +29,51 @@ function groupByMonth(items) {
  * Fetch monthly expense amounts from the backend.
  * @returns {Promise<number[]>} Monthly expense totals
  */
-export async function getMonthlyExpenses() {
+/**
+ * Fetch monthly expense amounts for a specific year.
+ *
+ * @param {number} [year=new Date().getFullYear()] - Target year.
+ * @returns {Promise<number[]>} Monthly expense totals.
+ */
+export async function getMonthlyExpenses(year = new Date().getFullYear()) {
   const res = await fetch('/expenses');
   const data = await res.json();
-  return groupByMonth(data);
+  return groupByMonth(data, year);
 }
 
 /**
  * Fetch monthly income amounts from the backend.
  * @returns {Promise<number[]>} Monthly income totals
  */
-export async function getMonthlyIncome() {
+/**
+ * Fetch monthly income amounts for a specific year.
+ *
+ * @param {number} [year=new Date().getFullYear()] - Target year.
+ * @returns {Promise<number[]>} Monthly income totals.
+ */
+export async function getMonthlyIncome(year = new Date().getFullYear()) {
   const res = await fetch('/incomes');
   const data = await res.json();
-  return groupByMonth(data);
+  return groupByMonth(data, year);
 }
 
 /**
  * Fetch expenses and calculate tag-based spending amounts.
  * @returns {Promise<Object<string, number[]>[]>} Tag-based monthly expense data
  */
-export async function getTagSpendings() {
+/**
+ * Fetch expenses and calculate tag-based spending amounts for a year.
+ *
+ * @param {number} [year=new Date().getFullYear()] - Target year.
+ * @returns {Promise<Object<string, number[]>[]>} Tag-based monthly expense data.
+ */
+export async function getTagSpendings(year = new Date().getFullYear()) {
   const res = await fetch('/expenses');
   const data = await res.json();
   const tagMap = {};
   data.forEach((it) => {
+    const date = new Date(it.created_at * 1000);
+    if (date.getFullYear() !== year) return;
     const tag = it.description || 'その他';
     if (!tagMap[tag]) {
       tagMap[tag] = Array(12).fill(0);

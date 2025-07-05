@@ -23,16 +23,24 @@ async function run() {
     };
   };
 
-  const expenses = await getMonthlyExpenses();
+  const year = new Date(expenseData[0].created_at * 1000).getFullYear();
+
+  const expenses = await getMonthlyExpenses(year);
   assert.strictEqual(expenses.length, 12, 'Expenses array should have 12 months');
   assert.strictEqual(expenses[0], 100);
   assert.strictEqual(expenses[1], 200);
 
-  const incomes = await getMonthlyIncome();
+  const emptyExpenses = await getMonthlyExpenses(year - 1);
+  assert.ok(emptyExpenses.every(v => v === 0), 'Different year returns zeros');
+
+  const incomes = await getMonthlyIncome(year);
   assert.strictEqual(incomes[0], 300);
   assert.strictEqual(incomes[2], 200);
 
-  const tags = await getTagSpendings();
+  const emptyIncomes = await getMonthlyIncome(year - 1);
+  assert.ok(emptyIncomes.every(v => v === 0), 'Different year incomes are zero');
+
+  const tags = await getTagSpendings(year);
   assert.ok(Array.isArray(tags) && tags.length === 2, 'Tag data should contain two tags');
 
   const recent = await getRecentRecords();
