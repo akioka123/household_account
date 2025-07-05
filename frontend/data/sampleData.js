@@ -18,9 +18,8 @@
 function groupByMonth(items, year) {
   const result = Array(12).fill(0);
   items.forEach((it) => {
-    const date = new Date(it.created_at * 1000);
-    if (date.getFullYear() !== year) return;
-    const month = date.getMonth();
+    const [y, m] = (it.target_month || new Date(it.created_at * 1000).toISOString().slice(0,7)).split('-').map(Number);
+    const month = m - 1;
     result[month] += it.amount;
   });
   return result;
@@ -79,7 +78,7 @@ export async function getTagSpendings(year = new Date().getFullYear()) {
     if (!tagMap[tag]) {
       tagMap[tag] = Array(12).fill(0);
     }
-    const month = date.getMonth();
+    const month = Number((it.target_month || new Date(it.created_at * 1000).toISOString().slice(0, 7)).split('-')[1]) - 1;
     tagMap[tag][month] += it.amount;
   });
   return Object.entries(tagMap).map(([tag, amounts]) => ({ tag, amounts }));

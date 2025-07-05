@@ -50,14 +50,10 @@ export default function ExpenseForm() {
   container.renderPromise = renderPromise;
   const renderExpenseList = async (ym) => {
     const seq = ++renderSeq;
-    const [year, month] = ym.split('-').map(Number);
     expenseListContainer.innerHTML = '';
     const res = await fetch('/expenses');
     const expenses = await res.json();
-    const filtered = expenses.filter((e) => {
-      const d = new Date(e.created_at * 1000);
-      return d.getFullYear() === Number(year) && d.getMonth() + 1 === Number(month);
-    });
+    const filtered = expenses.filter((e) => e.target_month === ym);
 
     if (filtered.length === 0) {
       expenseListContainer.textContent = 'この月には支出がありません。';
@@ -75,7 +71,8 @@ export default function ExpenseForm() {
           <p>内容: ${expense.description}</p>
           <p>日付: ${new Date(expense.created_at * 1000).toLocaleDateString()}</p>
         </div>
-        <button data-id="${expense.id}" data-amount="${expense.amount}" data-description="${expense.description}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">編集</button>
+        <button data-id="${expense.id}" data-amount="${expense.amount}" data-description="${expense.description}" data-month="${expense.target_month}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">編集</button>
+        <button data-id="${expense.id}" class="delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2">削除</button>
       `;
       ul.appendChild(li);
     });
@@ -89,10 +86,12 @@ export default function ExpenseForm() {
         const currentAmount = e.target.dataset.amount;
         const currentDescription = e.target.dataset.description;
         const listItem = e.target.closest('li');
+        const currentMonth = e.target.dataset.month;
         listItem.innerHTML = `
           <div class="flex flex-col space-y-2 w-full">
             <input type="number" class="edit-amount border p-2" value="${currentAmount}">
             <input type="text" class="edit-description border p-2" value="${currentDescription}">
+            <input type="month" class="edit-month border p-2" value="${currentMonth}">
             <div class="flex space-x-2">
               <button data-id="${id}" class="save-btn bg-green-500 text-white px-3 py-1 rounded">保存</button>
               <button class="cancel-btn bg-gray-500 text-white px-3 py-1 rounded">キャンセル</button>
@@ -103,10 +102,11 @@ export default function ExpenseForm() {
         listItem.querySelector('.save-btn').addEventListener('click', async () => {
           const newAmount = listItem.querySelector('.edit-amount').value;
           const newDescription = listItem.querySelector('.edit-description').value;
+          const newMonth = listItem.querySelector('.edit-month').value;
           await fetch(`/expenses/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: Number(newAmount), description: newDescription })
+            body: JSON.stringify({ amount: Number(newAmount), description: newDescription, targetMonth: newMonth })
           });
           renderExpenseList(monthInput.value);
         });
@@ -114,6 +114,15 @@ export default function ExpenseForm() {
         listItem.querySelector('.cancel-btn').addEventListener('click', () => {
           renderExpenseList(monthInput.value);
         });
+      });
+    });
+    ul.querySelectorAll('.delete-btn').forEach((button) => {
+      button.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        if (window.confirm('削除してよろしいですか？')) {
+          await fetch(`/expenses/${id}`, { method: 'DELETE' });
+          renderExpenseList(monthInput.value);
+        }
       });
     });
   };
@@ -135,7 +144,7 @@ export default function ExpenseForm() {
     await fetch('/expenses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, description })
+      body: JSON.stringify({ amount, description, targetMonth: monthInput.value })
     });
     amountInput.value = '';
     descInput.value = '';

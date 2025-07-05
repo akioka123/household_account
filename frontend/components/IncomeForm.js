@@ -69,7 +69,8 @@ export default function IncomeForm() {
           <p>内容: ${income.description}</p>
           <p>日付: ${new Date(income.created_at * 1000).toLocaleDateString()}</p>
         </div>
-        <button data-id="${income.id}" data-amount="${income.amount}" data-description="${income.description}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">編集</button>
+        <button data-id="${income.id}" data-amount="${income.amount}" data-description="${income.description}" data-month="${income.target_month}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">編集</button>
+        <button data-id="${income.id}" class="delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2">削除</button>
       `;
       ul.appendChild(li);
     });
@@ -81,12 +82,14 @@ export default function IncomeForm() {
         const id = e.target.dataset.id;
         const currentAmount = e.target.dataset.amount;
         const currentDescription = e.target.dataset.description;
+        const currentMonth = e.target.dataset.month;
         
         const listItem = e.target.closest('li');
         listItem.innerHTML = `
           <div class="flex flex-col space-y-2 w-full">
             <input type="number" class="edit-amount border p-2" value="${currentAmount}">
             <input type="text" class="edit-description border p-2" value="${currentDescription}">
+            <input type="month" class="edit-month border p-2" value="${currentMonth}">
             <div class="flex space-x-2">
               <button data-id="${id}" class="save-btn bg-green-500 text-white px-3 py-1 rounded">保存</button>
               <button class="cancel-btn bg-gray-500 text-white px-3 py-1 rounded">キャンセル</button>
@@ -97,10 +100,11 @@ export default function IncomeForm() {
         listItem.querySelector('.save-btn').addEventListener('click', async (saveEvent) => {
           const newAmount = listItem.querySelector('.edit-amount').value;
           const newDescription = listItem.querySelector('.edit-description').value;
+          const newMonth = listItem.querySelector('.edit-month').value;
           await fetch(`/incomes/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: Number(newAmount), description: newDescription })
+            body: JSON.stringify({ amount: Number(newAmount), description: newDescription, targetMonth: newMonth })
           });
           renderIncomeList(monthInput.value); // Re-render after save
         });
@@ -108,6 +112,15 @@ export default function IncomeForm() {
         listItem.querySelector('.cancel-btn').addEventListener('click', () => {
           renderIncomeList(monthInput.value); // Re-render to revert changes
         });
+      });
+    });
+    ul.querySelectorAll('.delete-btn').forEach(button => {
+      button.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        if (window.confirm('削除してよろしいですか？')) {
+          await fetch(`/incomes/${id}`, { method: 'DELETE' });
+          renderIncomeList(monthInput.value);
+        }
       });
     });
   };
@@ -129,7 +142,7 @@ export default function IncomeForm() {
     await fetch('/incomes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, description })
+      body: JSON.stringify({ amount, description, targetMonth: monthInput.value })
     });
     amountInput.value = '';
     descInput.value = '';
