@@ -17,7 +17,8 @@ export default async function Dashboard() {
   root.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
   root.appendChild(NavBar('ダッシュボード'));
 
-  // Create selector to unify y-axis scale across charts
+  // Create selector to unify y-axis scale across charts.
+  // The default is set to 500000 to align with typical monthly totals.
   const scaleSelect = document.createElement('select');
   [100000, 500000, 1000000].forEach((v) => {
     const option = document.createElement('option');
@@ -26,12 +27,13 @@ export default async function Dashboard() {
     scaleSelect.appendChild(option);
   });
   scaleSelect.className = 'border p-1 mb-2 self-end';
-  root.appendChild(scaleSelect);
 
-  const expenseCanvas = document.createElement('canvas');
-  expenseCanvas.className = 'w-full h-64';
+  scaleSelect.value = '500000';
+
   const incomeCanvas = document.createElement('canvas');
   incomeCanvas.className = 'w-full h-64';
+  const expenseCanvas = document.createElement('canvas');
+  expenseCanvas.className = 'w-full h-64';
   const tagCanvas = document.createElement('canvas');
   tagCanvas.className = 'w-full h-64';
 
@@ -41,11 +43,11 @@ export default async function Dashboard() {
 
   const chartContainer = document.createElement('div');
   chartContainer.className = 'grid grid-cols-1 gap-4';
-  chartContainer.appendChild(expenseCanvas);
+  chartContainer.appendChild(scaleSelect);
   chartContainer.appendChild(incomeCanvas);
+  chartContainer.appendChild(expenseCanvas);
+  chartContainer.appendChild(tagSelect);
   chartContainer.appendChild(tagCanvas);
-
-  root.appendChild(tagSelect);
 
   const wrapper = document.createElement('div');
   wrapper.className = 'w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4';
@@ -74,20 +76,20 @@ export default async function Dashboard() {
     getTagSpendings()
   ]);
 
-  const expenseChart = new LineChart(
-    expenseCanvas,
-    months,
-    expenses,
-    '支出',
-    'rgba(255, 99, 132, 1)',
-    Number(scaleSelect.value)
-  );
   const incomeChart = new LineChart(
     incomeCanvas,
     months,
     income,
     '収入',
     'rgba(54, 162, 235, 1)',
+    Number(scaleSelect.value)
+  );
+  const expenseChart = new LineChart(
+    expenseCanvas,
+    months,
+    expenses,
+    '支出',
+    'rgba(255, 99, 132, 1)',
     Number(scaleSelect.value)
   );
 
