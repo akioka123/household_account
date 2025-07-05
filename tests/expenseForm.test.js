@@ -7,18 +7,20 @@ import ExpenseForm from '../frontend/components/ExpenseForm.js';
  */
 async function run() {
   const records = [
-    { id: 1, amount: 100, description: 'A', created_at: Date.parse('2024-05-01') / 1000 },
-    { id: 2, amount: 200, description: 'B', created_at: Date.parse('2024-05-10') / 1000 },
-    { id: 3, amount: 300, description: 'C', created_at: Date.parse('2024-06-01') / 1000 }
+    { id: 1, amount: 100, description: 'A', created_at: Date.parse('2024-05-01') / 1000, target_month: '2024-05' },
+    { id: 2, amount: 200, description: 'B', created_at: Date.parse('2024-05-10') / 1000, target_month: '2024-05' },
+    { id: 3, amount: 300, description: 'C', created_at: Date.parse('2024-06-01') / 1000, target_month: '2024-06' }
   ];
   let postCalled = false;
   let putCalled = false;
+  let deleteCalled = false;
   global.fetch = async (url, opts) => {
     if (url === '/expenses' && (!opts || opts.method === 'GET')) {
       return { json: async () => records };
     }
     if (url === '/expenses' && opts && opts.method === 'POST') { postCalled = true; return { ok: true }; }
     if (url.startsWith('/expenses/') && opts && opts.method === 'PUT') { putCalled = true; return { ok: true }; }
+    if (url.startsWith('/expenses/') && opts && opts.method === 'DELETE') { deleteCalled = true; return { ok: true }; }
     throw new Error('unknown url');
   };
 
@@ -53,6 +55,11 @@ async function run() {
   items[0].querySelector('.save-btn').dispatchEvent(new dom.window.Event('click'));
   await new Promise(res => setImmediate(res));
   assert.ok(putCalled, 'PUT should be called when saving edit');
+
+  global.window.confirm = () => true;
+  items[1].querySelector('.delete-btn').dispatchEvent(new dom.window.Event('click'));
+  await new Promise(res => setImmediate(res));
+  assert.ok(deleteCalled, 'DELETE should be called when deleting record');
 
   console.log('ExpenseForm tests passed');
 }

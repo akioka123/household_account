@@ -6,12 +6,12 @@ import { getMonthlyExpenses, getMonthlyIncome, getTagSpendings, getRecentRecords
  */
 async function run() {
   const expenseData = [
-    { amount: 100, description: 'Food', created_at: 1705276800 },
-    { amount: 200, description: 'Rent', created_at: 1707523200 }
+    { amount: 100, description: 'Food', created_at: 1705276800, target_month: '2024-01' },
+    { amount: 200, description: 'Rent', created_at: 1707523200, target_month: '2024-02' }
   ];
   const incomeData = [
-    { amount: 300, description: 'salary', created_at: 1704412800 },
-    { amount: 200, description: 'bonus', created_at: 1710892800 }
+    { amount: 300, description: 'salary', created_at: 1704412800, target_month: '2024-01' },
+    { amount: 200, description: 'bonus', created_at: 1710892800, target_month: '2024-03' }
   ];
   global.fetch = async (url) => {
     return {

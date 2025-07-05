@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addExpense, getExpenses, addIncome, getIncomes, getIncomesByMonth, updateIncome, updateExpense } from './db.js';
+import { addExpense, getExpenses, addIncome, getIncomes, getIncomesByMonth, updateIncome, updateExpense, deleteExpense, deleteIncome } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       const data = JSON.parse(body || '{}');
-      addExpense(Number(data.amount), data.description || '');
+      addExpense(Number(data.amount), data.description || '', data.targetMonth);
       res.statusCode = 201;
       res.end('OK');
     });
@@ -46,10 +46,18 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       const data = JSON.parse(body || '{}');
-      updateExpense(id, Number(data.amount), data.description || '');
+      updateExpense(id, Number(data.amount), data.description || '', data.targetMonth);
       res.statusCode = 200;
       res.end('OK');
     });
+    return;
+  }
+
+  if (req.url.startsWith('/expenses/') && req.method === 'DELETE') {
+    const id = Number(req.url.split('/')[2]);
+    deleteExpense(id);
+    res.statusCode = 204;
+    res.end();
     return;
   }
 
@@ -58,7 +66,7 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       const data = JSON.parse(body || '{}');
-      addIncome(Number(data.amount), data.description || '');
+      addIncome(Number(data.amount), data.description || '', data.targetMonth);
       res.statusCode = 201;
       res.end('OK');
     });
@@ -87,7 +95,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       const data = JSON.parse(body || '{}');
       if (!isNaN(id) && data.amount && data.description !== undefined) {
-        updateIncome(id, Number(data.amount), data.description);
+        updateIncome(id, Number(data.amount), data.description, data.targetMonth);
         res.statusCode = 200;
         res.end('OK');
       } else {
@@ -95,6 +103,14 @@ const server = http.createServer((req, res) => {
         res.end('Bad Request');
       }
     });
+    return;
+  }
+
+  if (req.url.startsWith('/incomes/') && req.method === 'DELETE') {
+    const id = parseInt(req.url.split('/')[2]);
+    deleteIncome(id);
+    res.statusCode = 204;
+    res.end();
     return;
   }
 
