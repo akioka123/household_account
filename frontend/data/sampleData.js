@@ -19,6 +19,7 @@ function groupByMonth(items, year) {
   const result = Array(12).fill(0);
   items.forEach((it) => {
     const [y, m] = (it.target_month || new Date(it.created_at * 1000).toISOString().slice(0,7)).split('-').map(Number);
+    if (y !== year) return;
     const month = m - 1;
     result[month] += it.amount;
   });
