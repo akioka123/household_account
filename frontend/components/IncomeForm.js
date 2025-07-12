@@ -1,8 +1,135 @@
 import NavBar from './NavBar.js';
 import { formatAmount } from '../utils/format.js';
+import {
+  fetchIncomes,
+  createIncome,
+  updateIncome,
+  deleteIncome
+} from '../api/incomesAPI.js';
 
 /**
- * Income input form component for registering incomes via the backend API.
+ * Build a list item element representing an income.
+ *
+ * @param {object} income - Income object.
+ * @param {Function} onEdit - Click handler for the edit button.
+ * @param {Function} onDelete - Click handler for the delete button.
+ * @returns {HTMLLIElement} Generated list element.
+ */
+function createIncomeItem(income, onEdit, onDelete) {
+  const li = document.createElement('li');
+  li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
+
+  const info = document.createElement('div');
+  const pAmount = document.createElement('p');
+  pAmount.textContent = `金額: ${formatAmount(income.amount)}`;
+  const pDesc = document.createElement('p');
+  pDesc.textContent = `内容: ${income.description}`;
+  const pDate = document.createElement('p');
+  pDate.textContent = `日付: ${new Date(income.created_at * 1000).toLocaleDateString()}`;
+  info.append(pAmount, pDesc, pDate);
+
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '編集';
+  editBtn.className = 'edit-btn bg-yellow-500 text-white px-3 py-1 rounded';
+
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '削除';
+  delBtn.className = 'delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2';
+
+  editBtn.addEventListener('click', onEdit);
+  delBtn.addEventListener('click', onDelete);
+
+  li.append(info, editBtn, delBtn);
+  return li;
+}
+
+/**
+ * Replace the list item with inline editing controls for incomes.
+ *
+ * @param {HTMLLIElement} li - Target list item.
+ * @param {object} income - Income data to pre-fill.
+ * @param {Function} onSave - Callback when save is clicked.
+ * @param {Function} onCancel - Callback when cancel is clicked.
+ */
+function showEditForm(li, income, onSave, onCancel) {
+  li.innerHTML = `
+    <div class="flex flex-col space-y-2 w-full">
+      <input type="number" class="edit-amount border p-2" value="${income.amount}">
+      <input type="text" class="edit-description border p-2" value="${income.description}">
+      <input type="month" class="edit-month border p-2" value="${income.target_month}">
+      <div class="flex space-x-2">
+        <button class="save-btn bg-green-500 text-white px-3 py-1 rounded">保存</button>
+        <button class="cancel-btn bg-gray-500 text-white px-3 py-1 rounded">キャンセル</button>
+      </div>
+    </div>`;
+
+  li.querySelector('.save-btn').addEventListener('click', () => {
+    const newAmount = Number(li.querySelector('.edit-amount').value);
+    const newDescription = li.querySelector('.edit-description').value;
+    const newMonth = li.querySelector('.edit-month').value;
+    onSave({ amount: newAmount, description: newDescription, month: newMonth });
+  });
+
+  li.querySelector('.cancel-btn').addEventListener('click', onCancel);
+}
+
+/**
+ * Attach autocomplete functionality using past income descriptions.
+ *
+ * @param {HTMLInputElement} input - Target description input.
+ */
+function setupAutocomplete(input) {
+  const wrapper = input.parentElement;
+  wrapper.style.position = 'relative';
+
+  const list = document.createElement('ul');
+  list.className =
+    'absolute left-0 right-0 bg-white border mt-1 max-h-40 overflow-y-auto z-10 hidden';
+  wrapper.appendChild(list);
+
+  let descriptions = [];
+
+  const filter = () => {
+    list.innerHTML = '';
+    const query = input.value.trim();
+    const items = descriptions.filter((d) => d.includes(query));
+    if (items.length === 0) {
+      list.classList.add('hidden');
+      return;
+    }
+    items.forEach((d) => {
+      const li = document.createElement('li');
+      li.textContent = d;
+      li.className = 'px-2 py-1 cursor-pointer hover:bg-gray-100';
+      li.addEventListener('mousedown', () => {
+        input.value = d;
+        list.classList.add('hidden');
+      });
+      list.appendChild(li);
+    });
+    list.classList.remove('hidden');
+  };
+
+  const load = async () => {
+    const incomes = await fetchIncomes();
+    const uniq = new Set();
+    incomes.forEach((i) => {
+      if (i.description) uniq.add(i.description);
+    });
+    descriptions = Array.from(uniq);
+    filter();
+  };
+
+  input.addEventListener('focus', load);
+  input.addEventListener('input', filter);
+  input.addEventListener('blur', () =>
+    setTimeout(() => list.classList.add('hidden'), 100)
+  );
+}
+
+/**
+ * Income page component providing registration and list editing in one screen.
+ * Mirrors the expense screen implementation.
  * @module IncomeForm
  */
 export default function IncomeForm() {
@@ -10,7 +137,6 @@ export default function IncomeForm() {
   container.className = 'min-h-screen flex flex-col items-center p-4 bg-gray-50';
   container.appendChild(NavBar('収入登録'));
 
-  // Month selection using calendar component
   const now = new Date();
   const monthInput = document.createElement('input');
   monthInput.type = 'month';
@@ -38,100 +164,57 @@ export default function IncomeForm() {
   form.appendChild(amountInput);
   form.appendChild(descInput);
   form.appendChild(submitBtn);
+  setupAutocomplete(descInput);
   container.appendChild(form);
 
   const incomeListContainer = document.createElement('div');
   incomeListContainer.className = 'w-full max-w-5xl mt-4';
   container.appendChild(incomeListContainer);
 
+  let renderSeq = 0;
   let renderPromise = Promise.resolve();
   container.renderPromise = renderPromise;
-
   const renderIncomeList = async (ym) => {
-    incomeListContainer.innerHTML = ''; // Clear previous list
-    const [year, month] = ym.split('-').map(Number);
-    const response = await fetch(`/incomes/month/${year}/${month}`);
-    const incomes = await response.json();
+    const seq = ++renderSeq;
+    incomeListContainer.innerHTML = '';
+    const incomes = await fetchIncomes();
+    const filtered = incomes.filter((i) => i.target_month === ym);
 
-    if (incomes.length === 0) {
+    if (filtered.length === 0) {
       incomeListContainer.textContent = 'この月には収入がありません。';
       return;
     }
 
     const ul = document.createElement('ul');
     ul.className = 'grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
-    incomes.slice(0, 25).forEach(income => {
-      const li = document.createElement('li');
-      li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
-      li.innerHTML = `
-        <div>
-          <p>金額: ${formatAmount(income.amount)}</p>
-          <p>内容: ${income.description}</p>
-          <p>日付: ${new Date(income.created_at * 1000).toLocaleDateString()}</p>
-        </div>
-        <button data-id="${income.id}" data-amount="${income.amount}" data-description="${income.description}" data-month="${income.target_month}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">編集</button>
-        <button data-id="${income.id}" class="delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2">削除</button>
-      `;
+    filtered.slice(0, 25).forEach((income) => {
+      const li = createIncomeItem(
+        income,
+        () => {
+          renderSeq++;
+          showEditForm(li, income, async (updated) => {
+            await updateIncome(income.id, updated.amount, updated.description, updated.month);
+            renderIncomeList(monthInput.value);
+          }, () => renderIncomeList(monthInput.value));
+        },
+        async () => {
+          if (window.confirm('削除してよろしいですか？')) {
+            await deleteIncome(income.id);
+            renderIncomeList(monthInput.value);
+          }
+        }
+      );
       ul.appendChild(li);
     });
+    if (seq !== renderSeq) return;
     incomeListContainer.appendChild(ul);
-
-    // Add event listeners for edit buttons
-    ul.querySelectorAll('.edit-btn').forEach(button => {
-      button.addEventListener('click', (e) => {
-        const id = e.target.dataset.id;
-        const currentAmount = e.target.dataset.amount;
-        const currentDescription = e.target.dataset.description;
-        const currentMonth = e.target.dataset.month;
-        
-        const listItem = e.target.closest('li');
-        listItem.innerHTML = `
-          <div class="flex flex-col space-y-2 w-full">
-            <input type="number" class="edit-amount border p-2" value="${currentAmount}">
-            <input type="text" class="edit-description border p-2" value="${currentDescription}">
-            <input type="month" class="edit-month border p-2" value="${currentMonth}">
-            <div class="flex space-x-2">
-              <button data-id="${id}" class="save-btn bg-green-500 text-white px-3 py-1 rounded">保存</button>
-              <button class="cancel-btn bg-gray-500 text-white px-3 py-1 rounded">キャンセル</button>
-            </div>
-          </div>
-        `;
-
-        listItem.querySelector('.save-btn').addEventListener('click', async (saveEvent) => {
-          const newAmount = listItem.querySelector('.edit-amount').value;
-          const newDescription = listItem.querySelector('.edit-description').value;
-          const newMonth = listItem.querySelector('.edit-month').value;
-          await fetch(`/incomes/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: Number(newAmount), description: newDescription, targetMonth: newMonth })
-          });
-          renderIncomeList(monthInput.value); // Re-render after save
-        });
-
-        listItem.querySelector('.cancel-btn').addEventListener('click', () => {
-          renderIncomeList(monthInput.value); // Re-render to revert changes
-        });
-      });
-    });
-    ul.querySelectorAll('.delete-btn').forEach(button => {
-      button.addEventListener('click', async (e) => {
-        const id = e.target.dataset.id;
-        if (window.confirm('削除してよろしいですか？')) {
-          await fetch(`/incomes/${id}`, { method: 'DELETE' });
-          renderIncomeList(monthInput.value);
-        }
-      });
-    });
   };
 
-  // Update list when month input changes
   monthInput.addEventListener('change', () => {
     renderPromise = renderPromise.then(() => renderIncomeList(monthInput.value));
     container.renderPromise = renderPromise;
   });
 
-  // Initial render
   renderPromise = renderIncomeList(monthInput.value);
   container.renderPromise = renderPromise;
 
@@ -139,14 +222,10 @@ export default function IncomeForm() {
     e.preventDefault();
     const amount = Number(amountInput.value);
     const description = descInput.value;
-    await fetch('/incomes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, description, targetMonth: monthInput.value })
-    });
+    await createIncome(amount, description, monthInput.value);
     amountInput.value = '';
     descInput.value = '';
-    renderIncomeList(monthInput.value); // Re-render after new income added
+    renderIncomeList(monthInput.value);
   });
 
   return container;
