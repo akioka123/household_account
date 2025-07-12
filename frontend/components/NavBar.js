@@ -39,6 +39,13 @@ export default function NavBar(title) {
   incomeLink.className = 'text-blue-600 hover:underline';
   linkContainer.appendChild(incomeLink);
 
+  const cashLink = document.createElement('a');
+  cashLink.href = '#cash';
+  cashLink.textContent = '現金管理';
+  cashLink.className = 'text-blue-600 hover:underline';
+  linkContainer.appendChild(cashLink);
+
   nav.appendChild(linkContainer);
   return nav;
 }
+
