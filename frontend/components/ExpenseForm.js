@@ -1,5 +1,77 @@
 import NavBar from './NavBar.js';
 import { formatAmount } from '../utils/format.js';
+import {
+  fetchExpenses,
+  createExpense,
+  updateExpense,
+  deleteExpense
+} from '../api/expensesAPI.js';
+
+/**
+ * Build a list item element representing an expense.
+ *
+ * @param {object} expense - Expense object.
+ * @param {Function} onEdit - Click handler for the edit button.
+ * @param {Function} onDelete - Click handler for the delete button.
+ * @returns {HTMLLIElement} Generated list element.
+ */
+function createExpenseItem(expense, onEdit, onDelete) {
+  const li = document.createElement('li');
+  li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
+
+  const info = document.createElement('div');
+  const pAmount = document.createElement('p');
+  pAmount.textContent = `金額: ${formatAmount(expense.amount)}`;
+  const pDesc = document.createElement('p');
+  pDesc.textContent = `内容: ${expense.description}`;
+  const pDate = document.createElement('p');
+  pDate.textContent = `日付: ${new Date(expense.created_at * 1000).toLocaleDateString()}`;
+  info.append(pAmount, pDesc, pDate);
+
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '編集';
+  editBtn.className = 'edit-btn bg-yellow-500 text-white px-3 py-1 rounded';
+
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '削除';
+  delBtn.className = 'delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2';
+
+  editBtn.addEventListener('click', onEdit);
+  delBtn.addEventListener('click', onDelete);
+
+  li.append(info, editBtn, delBtn);
+  return li;
+}
+
+/**
+ * Replace the list item with inline editing controls.
+ *
+ * @param {HTMLLIElement} li - Target list item.
+ * @param {object} expense - Expense data to pre-fill.
+ * @param {Function} onSave - Callback when save is clicked.
+ * @param {Function} onCancel - Callback when cancel is clicked.
+ */
+function showEditForm(li, expense, onSave, onCancel) {
+  li.innerHTML = `
+    <div class="flex flex-col space-y-2 w-full">
+      <input type="number" class="edit-amount border p-2" value="${expense.amount}">
+      <input type="text" class="edit-description border p-2" value="${expense.description}">
+      <input type="month" class="edit-month border p-2" value="${expense.target_month}">
+      <div class="flex space-x-2">
+        <button class="save-btn bg-green-500 text-white px-3 py-1 rounded">保存</button>
+        <button class="cancel-btn bg-gray-500 text-white px-3 py-1 rounded">キャンセル</button>
+      </div>
+    </div>`;
+
+  li.querySelector('.save-btn').addEventListener('click', () => {
+    const newAmount = Number(li.querySelector('.edit-amount').value);
+    const newDescription = li.querySelector('.edit-description').value;
+    const newMonth = li.querySelector('.edit-month').value;
+    onSave({ amount: newAmount, description: newDescription, month: newMonth });
+  });
+
+  li.querySelector('.cancel-btn').addEventListener('click', onCancel);
+}
 
 /**
  * Expense page component providing registration and list editing in one screen.
@@ -51,8 +123,7 @@ export default function ExpenseForm() {
   const renderExpenseList = async (ym) => {
     const seq = ++renderSeq;
     expenseListContainer.innerHTML = '';
-    const res = await fetch('/expenses');
-    const expenses = await res.json();
+    const expenses = await fetchExpenses();
     const filtered = expenses.filter((e) => e.target_month === ym);
 
     if (filtered.length === 0) {
@@ -63,68 +134,26 @@ export default function ExpenseForm() {
     const ul = document.createElement('ul');
     ul.className = 'grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
     filtered.slice(0, 25).forEach((expense) => {
-      const li = document.createElement('li');
-      li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
-      li.innerHTML = `
-        <div>
-          <p>金額: ${formatAmount(expense.amount)}</p>
-          <p>内容: ${expense.description}</p>
-          <p>日付: ${new Date(expense.created_at * 1000).toLocaleDateString()}</p>
-        </div>
-        <button data-id="${expense.id}" data-amount="${expense.amount}" data-description="${expense.description}" data-month="${expense.target_month}" class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded">編集</button>
-        <button data-id="${expense.id}" class="delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2">削除</button>
-      `;
+      const li = createExpenseItem(
+        expense,
+        () => {
+          renderSeq++; // cancel pending renders to keep edit form visible
+          showEditForm(li, expense, async (updated) => {
+            await updateExpense(expense.id, updated.amount, updated.description, updated.month);
+            renderExpenseList(monthInput.value);
+          }, () => renderExpenseList(monthInput.value));
+        },
+        async () => {
+          if (window.confirm('削除してよろしいですか？')) {
+            await deleteExpense(expense.id);
+            renderExpenseList(monthInput.value);
+          }
+        }
+      );
       ul.appendChild(li);
     });
     if (seq !== renderSeq) return;
     expenseListContainer.appendChild(ul);
-
-    ul.querySelectorAll('.edit-btn').forEach((button) => {
-      button.addEventListener('click', (e) => {
-        renderSeq++; // cancel pending renders to keep edit form visible
-        const id = e.target.dataset.id;
-        const currentAmount = e.target.dataset.amount;
-        const currentDescription = e.target.dataset.description;
-        const listItem = e.target.closest('li');
-        const currentMonth = e.target.dataset.month;
-        listItem.innerHTML = `
-          <div class="flex flex-col space-y-2 w-full">
-            <input type="number" class="edit-amount border p-2" value="${currentAmount}">
-            <input type="text" class="edit-description border p-2" value="${currentDescription}">
-            <input type="month" class="edit-month border p-2" value="${currentMonth}">
-            <div class="flex space-x-2">
-              <button data-id="${id}" class="save-btn bg-green-500 text-white px-3 py-1 rounded">保存</button>
-              <button class="cancel-btn bg-gray-500 text-white px-3 py-1 rounded">キャンセル</button>
-            </div>
-          </div>
-        `;
-
-        listItem.querySelector('.save-btn').addEventListener('click', async () => {
-          const newAmount = listItem.querySelector('.edit-amount').value;
-          const newDescription = listItem.querySelector('.edit-description').value;
-          const newMonth = listItem.querySelector('.edit-month').value;
-          await fetch(`/expenses/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: Number(newAmount), description: newDescription, targetMonth: newMonth })
-          });
-          renderExpenseList(monthInput.value);
-        });
-
-        listItem.querySelector('.cancel-btn').addEventListener('click', () => {
-          renderExpenseList(monthInput.value);
-        });
-      });
-    });
-    ul.querySelectorAll('.delete-btn').forEach((button) => {
-      button.addEventListener('click', async (e) => {
-        const id = e.target.dataset.id;
-        if (window.confirm('削除してよろしいですか？')) {
-          await fetch(`/expenses/${id}`, { method: 'DELETE' });
-          renderExpenseList(monthInput.value);
-        }
-      });
-    });
   };
 
   // Update list when month input changes
@@ -141,11 +170,7 @@ export default function ExpenseForm() {
     e.preventDefault();
     const amount = Number(amountInput.value);
     const description = descInput.value;
-    await fetch('/expenses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, description, targetMonth: monthInput.value })
-    });
+    await createExpense(amount, description, monthInput.value);
     amountInput.value = '';
     descInput.value = '';
     renderExpenseList(monthInput.value);
