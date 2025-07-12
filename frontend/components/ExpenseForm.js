@@ -90,8 +90,9 @@ function setupAutocomplete(input) {
   const list = document.createElement('ul');
   // max-h-40 corresponds to roughly five list items height so scrolling is enabled
   // when more than five suggestions exist
+  console.log('Setting up autocomplete for', input);
   list.className =
-    'absolute left-0 right-0 bg-white border mt-1 max-h-40 overflow-y-auto z-10 hidden';
+    'absolute left-0 right-0 top-10 bg-white border mt-1 max-h-40 overflow-y-auto z-10 hidden ';
   wrapper.appendChild(list);
 
   let descriptions = [];
@@ -156,16 +157,19 @@ export default function ExpenseForm() {
   form.className = 'flex flex-row space-x-2 w-full max-w-5xl mb-4';
   const amountInput = document.createElement('input');
   amountInput.type = 'number';
+  amountInput.id = 'expense-amount';
   amountInput.placeholder = '金額';
   amountInput.className = 'border p-2 flex-1';
 
   const descInput = document.createElement('input');
   descInput.type = 'text';
+  descInput.id = 'expense-description';
   descInput.placeholder = '内容';
   descInput.className = 'border p-2 flex-1';
 
   const submitBtn = document.createElement('button');
   submitBtn.type = 'submit';
+  submitBtn.id = 'expense-submit';
   submitBtn.textContent = '登録';
   submitBtn.className = 'bg-blue-600 text-white p-2';
 
@@ -237,13 +241,6 @@ export default function ExpenseForm() {
     descInput.value = '';
     renderExpenseList(monthInput.value);
   });
-
-
-  const backLink = document.createElement('a');
-  backLink.href = '#';
-  backLink.textContent = '戻る';
-  backLink.className = 'text-blue-600 underline mt-4';
-  container.appendChild(backLink);
 
   return container;
 }

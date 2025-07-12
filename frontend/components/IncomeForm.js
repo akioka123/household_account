@@ -149,12 +149,5 @@ export default function IncomeForm() {
     renderIncomeList(monthInput.value); // Re-render after new income added
   });
 
-
-  const backLink = document.createElement('a');
-  backLink.href = '#';
-  backLink.textContent = '戻る';
-  backLink.className = 'text-blue-600 underline mt-4';
-  container.appendChild(backLink);
-
   return container;
 }
