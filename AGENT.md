@@ -1,4 +1,6 @@
 # 家計簿管理アプリ 開発フロー
+* **毎回必ず実行**
+  * AGENT_GUIDELINE.mdを読み込む。
 
 ## 全体的な決め事 (General Decisions)
 
