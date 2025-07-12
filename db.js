@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS incomes (
   target_month TEXT NOT NULL DEFAULT (strftime('%Y-%m','now')),
   created_at INTEGER DEFAULT (strftime('%s','now'))
 );
+CREATE TABLE IF NOT EXISTS cash_starts (
+  month TEXT PRIMARY KEY,
+  amount INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS cash_withdrawals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  month TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  created_at INTEGER DEFAULT (strftime('%s','now'))
+);
 `);
 
 /**
@@ -125,3 +135,60 @@ export function updateIncome(id, amount, description, targetMonth) {
   const stmt = db.prepare('UPDATE incomes SET amount = ?, description = ?, target_month = ? WHERE id = ?');
   return stmt.run(amount, description, targetMonth, id);
 }
+
+/**
+ * Get previous month string for YYYY-MM format.
+ * @param {string} ym - Current year-month string.
+ * @returns {string} Previous year-month string.
+ */
+function previousMonth(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 1);
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Insert or replace a monthly starting cash amount.
+ * If previous month exists, an expense record named '現金' is added
+ * using the formula: previous start + withdrawals - current start.
+ *
+ * @param {string} month - Year-month string in YYYY-MM format.
+ * @param {number} amount - Starting cash amount.
+ * @returns {void}
+ */
+export function insertCashStart(month, amount) {
+  const stmt = db.prepare('INSERT OR REPLACE INTO cash_starts (month, amount) VALUES (?, ?)');
+  stmt.run(month, amount);
+}
+
+/**
+ * Retrieve starting cash for a month.
+ * @param {string} month - Year-month string.
+ * @returns {{month:string, amount:number}|undefined} Start row.
+ */
+export function selectCashStart(month) {
+  return db.prepare('SELECT month, amount FROM cash_starts WHERE month = ?').get(month);
+}
+
+/**
+ * Insert a cash withdrawal record.
+ * @param {string} month - Year-month string.
+ * @param {number} amount - Withdrawal amount.
+ * @returns {number} Inserted row ID.
+ */
+export function insertCashWithdrawal(month, amount) {
+  const stmt = db.prepare('INSERT INTO cash_withdrawals (month, amount) VALUES (?, ?)');
+  const info = stmt.run(month, amount);
+  return Number(info.lastInsertRowid);
+}
+
+/**
+ * Retrieve withdrawals for a month.
+ * @param {string} month - Year-month string.
+ * @returns {Array<{id:number, month:string, amount:number, created_at:number}>} Rows.
+ */
+export function selectCashWithdrawals(month) {
+  return db.prepare('SELECT * FROM cash_withdrawals WHERE month = ? ORDER BY created_at').all(month);
+}
+

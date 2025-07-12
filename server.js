@@ -2,7 +2,23 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { addExpense, getExpenses, addIncome, getIncomes, getIncomesByMonth, updateIncome, updateExpense, deleteExpense, deleteIncome } from './db.js';
+import {
+  addExpense,
+  getExpenses,
+  addIncome,
+  getIncomes,
+  getIncomesByMonth,
+  updateIncome,
+  updateExpense,
+  deleteExpense,
+  deleteIncome
+} from './db.js';
+import {
+  registerCashStart,
+  getCashStart,
+  recordWithdrawal,
+  getWithdrawals
+} from './services/cashService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,6 +127,51 @@ const server = http.createServer((req, res) => {
     deleteIncome(id);
     res.statusCode = 204;
     res.end();
+    return;
+  }
+
+  if (req.url.startsWith('/cash/start/') && req.method === 'GET') {
+    const parts = req.url.split('/');
+    const year = parts[3];
+    const month = parts[4];
+    const ym = `${year}-${String(month).padStart(2, '0')}`;
+    const data = getCashStart(ym) || {};
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(data));
+    return;
+  }
+
+  if (req.url === '/cash/start' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const { month, amount } = JSON.parse(body || '{}');
+      registerCashStart(month, Number(amount));
+      res.statusCode = 201;
+      res.end('OK');
+    });
+    return;
+  }
+
+  if (req.url.startsWith('/cash/withdraw/') && req.method === 'GET') {
+    const parts = req.url.split('/');
+    const year = parts[3];
+    const month = parts[4];
+    const ym = `${year}-${String(month).padStart(2, '0')}`;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(getWithdrawals(ym)));
+    return;
+  }
+
+  if (req.url === '/cash/withdraw' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const { month, amount } = JSON.parse(body || '{}');
+      recordWithdrawal(month, Number(amount));
+      res.statusCode = 201;
+      res.end('OK');
+    });
     return;
   }
 
