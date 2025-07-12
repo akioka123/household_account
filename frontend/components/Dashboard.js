@@ -58,31 +58,41 @@ export default async function Dashboard() {
     '7月','8月','9月','10月','11月','12月'
   ];
 
-  const yearInput = document.createElement('input');
-  yearInput.type = 'month';
-  yearInput.className = 'border p-1 mb-2 self-end';
-  yearInput.value = `${new Date().getFullYear()}-01`;
+  const monthInput = document.createElement('input');
+  monthInput.type = 'month';
+  monthInput.className = 'border p-1 mb-2 self-end';
+  const now = new Date();
+  monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   const yearlyContainer = document.createElement('div');
   yearlyContainer.className = 'grid grid-cols-1 gap-4';
 
   /**
-   * Create a summary table for one year.
+   * Create a summary table for a 12 month range ending at the given year-month.
    *
-   * @param {number} year - The target year.
-   * @param {number[]} expenses - Monthly expense amounts.
-   * @param {number[]} income - Monthly income amounts.
+   * @param {number} year - End year.
+   * @param {number} month - End month (1-12).
+   * @param {Object<number, number[]>} expensesMap - Expense totals by year.
+   * @param {Object<number, number[]>} incomeMap - Income totals by year.
    * @returns {HTMLTableElement} Rendered table element.
    */
-  const createYearTable = (year, expenses, income) => {
+  const createRangeTable = (year, month, expensesMap, incomeMap) => {
+    const start = new Date(year, month - 12);
+    const caption = `${start.getFullYear()}/${String(start.getMonth() + 1).padStart(2, '0')}〜${year}/${String(month).padStart(2, '0')}`;
     const table = document.createElement('table');
     table.className = 'min-w-full text-sm text-left border';
-    table.innerHTML = `<caption class="font-bold">${year}年</caption><thead><tr><th class="border px-2">月</th><th class="border px-2">収入</th><th class="border px-2">支出</th><th class="border px-2">損益</th></tr></thead><tbody></tbody>`;
+    table.innerHTML = `<caption class="font-bold">${caption}</caption><thead><tr><th class="border px-2">年月</th><th class="border px-2">収入</th><th class="border px-2">支出</th><th class="border px-2">損益</th></tr></thead><tbody></tbody>`;
     for (let i = 0; i < 12; i++) {
-      const tr = document.createElement('tr');
-      const diff = income[i] - expenses[i];
+      const d = new Date(year, month - 1 - i);
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      const exp = (expensesMap[y] || [])[m] || 0;
+      const inc = (incomeMap[y] || [])[m] || 0;
+      const diff = inc - exp;
       const diffClass = diff < 0 ? ' text-red-600' : '';
-      tr.innerHTML = `<td class="border px-2">${months[i]}</td><td class="border px-2 text-right">${formatAmount(income[i])}</td><td class="border px-2 text-right">${formatAmount(expenses[i])}</td><td class="border px-2 text-right${diffClass}">${formatAmount(diff)}</td>`;
+      const ym = `${y}/${String(m + 1).padStart(2, '0')}`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="border px-2">${ym}</td><td class="border px-2 text-right">${formatAmount(inc)}</td><td class="border px-2 text-right">${formatAmount(exp)}</td><td class="border px-2 text-right${diffClass}">${formatAmount(diff)}</td>`;
       table.querySelector('tbody').appendChild(tr);
     }
     return table;
@@ -127,9 +137,20 @@ export default async function Dashboard() {
     Number(scaleSelect.value)
   );
 
-  yearlyContainer.appendChild(createYearTable(new Date().getFullYear(), expenses, income));
-  wrapper.appendChild(yearInput);
-  wrapper.appendChild(yearlyContainer);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const [prevExp, prevInc] = await Promise.all([
+    getMonthlyExpenses(currentYear - 1),
+    getMonthlyIncome(currentYear - 1)
+  ]);
+  const expenseMap = { [currentYear]: expenses, [currentYear - 1]: prevExp };
+  const incomeMap = { [currentYear]: income, [currentYear - 1]: prevInc };
+  yearlyContainer.appendChild(createRangeTable(currentYear, currentMonth, expenseMap, incomeMap));
+  const summarySection = document.createElement('div');
+  summarySection.className = 'flex flex-col';
+  summarySection.appendChild(monthInput);
+  summarySection.appendChild(yearlyContainer);
+  wrapper.appendChild(summarySection);
   root.appendChild(wrapper);
 
   const recent = await getRecentRecords();
@@ -173,15 +194,20 @@ export default async function Dashboard() {
     tagChart.updateData(months, d.amounts, d.tag);
   });
 
-  // reload yearly summary when year is changed
-  yearInput.addEventListener('change', async () => {
-    const year = new Date(yearInput.value).getFullYear();
-    const [exp, inc] = await Promise.all([
+  // reload summary when month is changed
+  monthInput.addEventListener('change', async () => {
+    const year = Number(monthInput.value.split('-')[0]);
+    const [exp, expPrev, inc, incPrev] = await Promise.all([
       getMonthlyExpenses(year),
-      getMonthlyIncome(year)
+      getMonthlyExpenses(year - 1),
+      getMonthlyIncome(year),
+      getMonthlyIncome(year - 1)
     ]);
+    const expenseData = { [year]: exp, [year - 1]: expPrev };
+    const incomeData = { [year]: inc, [year - 1]: incPrev };
+    const m = Number(monthInput.value.split('-')[1]);
     yearlyContainer.innerHTML = '';
-    yearlyContainer.appendChild(createYearTable(year, exp, inc));
+    yearlyContainer.appendChild(createRangeTable(year, m, expenseData, incomeData));
   });
 
   return root;
