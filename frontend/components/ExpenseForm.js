@@ -17,29 +17,32 @@ import {
  */
 function createExpenseItem(expense, onEdit, onDelete) {
   const li = document.createElement('li');
-  li.className = 'bg-white p-3 shadow rounded flex justify-between items-center';
+  li.className = 'bg-white p-3 shadow rounded justify-between items-center';
 
   const info = document.createElement('div');
-  const pAmount = document.createElement('p');
-  pAmount.textContent = `金額: ${formatAmount(expense.amount)}`;
+  info.className = 'grid grid-rows-2 md:grid-rows-3 grid-cols-2 md:grid-cols-1 gap-1 flex-1';
   const pDesc = document.createElement('p');
   pDesc.textContent = `内容: ${expense.description}`;
+  const pAmount = document.createElement('p');
+  pAmount.textContent = `金額: ${formatAmount(expense.amount)}`;
   const pDate = document.createElement('p');
   pDate.textContent = `日付: ${new Date(expense.created_at * 1000).toLocaleDateString()}`;
-  info.append(pAmount, pDesc, pDate);
+  info.append(pDesc, pAmount, pDate);
 
+  const btns = document.createElement('div');
+  btns.className = 'grid grid-rows-1 grid-cols-2 gap-1 flex-1 mt-2';
   const editBtn = document.createElement('button');
   editBtn.textContent = '編集';
-  editBtn.className = 'edit-btn bg-yellow-500 text-white px-3 py-1 rounded';
+  editBtn.className = 'edit-btn bg-yellow-500 text-white px-1 py-1 rounded';
 
   const delBtn = document.createElement('button');
   delBtn.textContent = '削除';
-  delBtn.className = 'delete-btn bg-red-500 text-white px-3 py-1 rounded ml-2';
+  delBtn.className = 'delete-btn bg-red-500 text-white px-1 py-1 rounded';
 
   editBtn.addEventListener('click', onEdit);
   delBtn.addEventListener('click', onDelete);
-
-  li.append(info, editBtn, delBtn);
+  btns.append(editBtn, delBtn);
+  li.append(info, btns);
   return li;
 }
 
