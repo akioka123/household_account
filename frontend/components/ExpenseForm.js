@@ -74,6 +74,64 @@ function showEditForm(li, expense, onSave, onCancel) {
 }
 
 /**
+ * Attach autocomplete functionality to the given text input using past
+ * expense descriptions. Suggestions appear on focus and filter as the user
+ * types by substring match.
+ *
+ * @param {HTMLInputElement} input - Target description input.
+ */
+function setupAutocomplete(input) {
+  const wrapper = input.parentElement;
+  wrapper.style.position = 'relative';
+
+  const list = document.createElement('ul');
+  // max-h-40 corresponds to roughly five list items height so scrolling is enabled
+  // when more than five suggestions exist
+  list.className =
+    'absolute left-0 right-0 bg-white border mt-1 max-h-40 overflow-y-auto z-10 hidden';
+  wrapper.appendChild(list);
+
+  let descriptions = [];
+
+  const filter = () => {
+    list.innerHTML = '';
+    const query = input.value.trim();
+    const items = descriptions.filter((d) => d.includes(query));
+    if (items.length === 0) {
+      list.classList.add('hidden');
+      return;
+    }
+    items.forEach((d) => {
+      const li = document.createElement('li');
+      li.textContent = d;
+      li.className = 'px-2 py-1 cursor-pointer hover:bg-gray-100';
+      li.addEventListener('mousedown', () => {
+        input.value = d;
+        list.classList.add('hidden');
+      });
+      list.appendChild(li);
+    });
+    list.classList.remove('hidden');
+  };
+
+  const load = async () => {
+    const expenses = await fetchExpenses();
+    const uniq = new Set();
+    expenses.forEach((e) => {
+      if (e.description) uniq.add(e.description);
+    });
+    descriptions = Array.from(uniq);
+    filter();
+  };
+
+  input.addEventListener('focus', load);
+  input.addEventListener('input', filter);
+  input.addEventListener('blur', () =>
+    setTimeout(() => list.classList.add('hidden'), 100)
+  );
+}
+
+/**
  * Expense page component providing registration and list editing in one screen.
  * The layout mirrors the income screen.
  * @module ExpenseForm
@@ -111,6 +169,7 @@ export default function ExpenseForm() {
   form.appendChild(amountInput);
   form.appendChild(descInput);
   form.appendChild(submitBtn);
+  setupAutocomplete(descInput);
   container.appendChild(form);
 
   const expenseListContainer = document.createElement('div');

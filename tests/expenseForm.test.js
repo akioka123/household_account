@@ -42,6 +42,14 @@ async function run() {
 
   const form = el.querySelector('form');
   const [amountInput, descInput] = form.querySelectorAll('input');
+  descInput.dispatchEvent(new dom.window.Event('focus'));
+  await new Promise(res => setImmediate(res));
+  let autoList = form.querySelector('ul');
+  assert.strictEqual(autoList.children.length, 3, 'Autocomplete should list past descriptions');
+  descInput.value = 'B';
+  descInput.dispatchEvent(new dom.window.Event('input'));
+  await new Promise(res => setImmediate(res));
+  assert.strictEqual(autoList.children.length, 1, 'Autocomplete should filter by substring');
   amountInput.value = 500;
   descInput.value = 'test';
   form.dispatchEvent(new dom.window.Event('submit'));
