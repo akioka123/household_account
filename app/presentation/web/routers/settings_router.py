@@ -128,6 +128,41 @@ async def create_card(
     )
 
 
+@router.post("/settings/cards/{card_id}/toggle", response_class=HTMLResponse)
+async def toggle_card(
+    request: Request,
+    card_id: int,
+    card_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
+) -> HTMLResponse:
+    """カードの有効/無効を切り替え"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    # カードを取得して現在の状態を確認
+    cards = await card_uc.get_all_cards()
+    card = next((c for c in cards if c.id == card_id), None)
+    if card is None:
+        # カードが見つからない場合はエラーを返す（簡易実装）
+        cards = await card_uc.get_all_cards()
+        return templates.TemplateResponse(
+            "settings/cards_tab.html",
+            {"request": request, "cards": cards},
+        )
+
+    # 有効/無効を切り替え
+    command = UpdateCardCommand(card_id=card_id, enabled=not card.enabled)
+    await card_uc.update_card(command)
+
+    # カード一覧を再取得
+    cards = await card_uc.get_all_cards()
+
+    return templates.TemplateResponse(
+        "settings/cards_tab.html",
+        {"request": request, "cards": cards},
+    )
+
+
 @router.post("/settings/limits", response_class=HTMLResponse)
 async def update_limits(
     request: Request,
