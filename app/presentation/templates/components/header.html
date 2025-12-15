@@ -11,10 +11,10 @@
                         id="year-select" 
                         name="year"
                         class="border border-gray-300 rounded-md px-3 py-1 text-sm"
-                        hx-get="/dashboard/{year}"
                         hx-target="#main-content"
                         hx-trigger="change"
                         hx-swap="innerHTML"
+                        onchange="this.setAttribute('hx-get', '/dashboard/' + this.value)"
                     >
                         {% for year in years %}
                         <option value="{{ year.value }}" {% if year.selected %}selected{% endif %}>
@@ -23,6 +23,16 @@
                         </option>
                         {% endfor %}
                     </select>
+                    <script>
+                    // 初期値を設定（ページロード時）
+                    (function() {
+                        const select = document.getElementById('year-select');
+                        if (select) {
+                            const selectedValue = select.value;
+                            select.setAttribute('hx-get', '/dashboard/' + selectedValue);
+                        }
+                    })();
+                    </script>
                 </div>
                 
                 <!-- グローバルナビゲーション -->

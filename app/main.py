@@ -1,12 +1,15 @@
 """FastAPIアプリケーションのエントリーポイント"""
 from __future__ import annotations
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from datetime import datetime
+
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.infrastructure.middleware.access_log import AccessLogMiddleware
+from app.presentation.web.routers.dashboard_router import router as dashboard_router
+from app.presentation.web.routers.settings_router import router as settings_router
 
 app = FastAPI(
     title="家計簿ダッシュボード",
@@ -20,16 +23,13 @@ app.add_middleware(AccessLogMiddleware)
 # Jinja2テンプレートエンジン設定
 templates = Jinja2Templates(directory="app/presentation/templates")
 
+# ルーターを登録
+app.include_router(dashboard_router)
+app.include_router(settings_router)
 
-@app.get("/", response_class=HTMLResponse)
-async def root() -> str:
-    """ルートエンドポイント（暫定）"""
-    return """
-    <html>
-        <head><title>家計簿ダッシュボード</title></head>
-        <body>
-            <h1>家計簿ダッシュボード</h1>
-            <p>アプリケーションが正常に起動しました。</p>
-        </body>
-    </html>
-    """
+
+@app.get("/")
+async def root() -> RedirectResponse:
+    """ルートエンドポイント：現在年のダッシュボードにリダイレクト"""
+    current_year = datetime.now().year
+    return RedirectResponse(url=f"/dashboard/{current_year}")

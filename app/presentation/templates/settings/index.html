@@ -1,0 +1,59 @@
+{% extends "components/base.html" %}
+
+{% block title %}設定{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-2xl font-bold mb-6">設定</h2>
+    
+    <!-- タブナビゲーション -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <button 
+                id="tab-cards" 
+                class="tab-button border-b-2 border-blue-500 py-2 px-4 text-blue-600 font-medium"
+                hx-get="/settings/tab/cards"
+                hx-target="#tab-content"
+                hx-swap="innerHTML"
+            >
+                カード管理
+            </button>
+            <button 
+                id="tab-limits" 
+                class="tab-button border-b-2 border-transparent py-2 px-4 text-gray-500 hover:text-gray-700"
+                hx-get="/settings/tab/limits"
+                hx-target="#tab-content"
+                hx-swap="innerHTML"
+            >
+                上限設定
+            </button>
+        </nav>
+    </div>
+    
+    <!-- タブコンテンツ -->
+    <div id="tab-content">
+        {% include "settings/cards_tab.html" %}
+    </div>
+</div>
+
+<script>
+// タブ切り替え時のスタイル更新
+document.body.addEventListener('htmx:afterSwap', function(event) {
+    if (event.detail.target.id === 'tab-content') {
+        // すべてのタブボタンのスタイルをリセット
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'text-blue-600', 'font-medium');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+        
+        // アクティブなタブのスタイルを適用
+        const activeTab = event.detail.pathInfo.requestPath.includes('cards') ? 'tab-cards' : 'tab-limits';
+        const activeButton = document.getElementById(activeTab);
+        if (activeButton) {
+            activeButton.classList.remove('border-transparent', 'text-gray-500');
+            activeButton.classList.add('border-blue-500', 'text-blue-600', 'font-medium');
+        }
+    }
+});
+</script>
+{% endblock %}
