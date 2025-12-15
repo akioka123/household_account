@@ -9,7 +9,7 @@ from app.domain.model.settings import Settings
 class SettingsRepository(Protocol):
     """設定の永続化Port"""
 
-    async def find() -> Settings:
+    async def find(self) -> Settings:
         """設定を取得（存在しない場合はデフォルト設定を返す）"""
         ...
 
