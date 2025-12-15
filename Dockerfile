@@ -1,7 +1,22 @@
-FROM node:20-alpine
+FROM python:3.12-slim
+
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+
+# システム依存関係のインストール
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python依存関係のインストール
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# アプリケーションコードのコピー
 COPY . .
-EXPOSE 3000
-CMD ["node", "server.js"]
+
+# ポート公開
+EXPOSE 8000
+
+# デフォルトコマンド（docker-composeで上書き可能）
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
