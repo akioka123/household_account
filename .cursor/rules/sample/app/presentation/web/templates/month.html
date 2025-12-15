@@ -1,0 +1,17 @@
+<!-- サンプル：実運用でJinja2化する場合の雛形 -->
+<!-- 参照：@../router.py -->
+<html>
+  <body>
+    <h1>{{ year }}-{{ '%02d'|format(month) }}</h1>
+
+    <form hx-post="/month/{{ year }}/{{ month }}/income" hx-target="#result" hx-swap="innerHTML">
+      <input type="number" name="salary_gross" placeholder="salary_gross" />
+      <input type="number" name="salary_net" placeholder="salary_net" />
+      <input type="number" name="bonus_gross" placeholder="bonus_gross" />
+      <input type="number" name="bonus_net" placeholder="bonus_net" />
+      <button type="submit">save</button>
+    </form>
+
+    <div id="result"></div>
+  </body>
+</html>
