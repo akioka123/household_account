@@ -48,7 +48,7 @@ class SqlAlchemySettingsRepository:
             )
             self._session.add(model)
 
-        await self._session.flush()
+        self._session.flush()
 
 
 # Protocol実装として登録

@@ -49,7 +49,7 @@ class SqlAlchemyCardRepository:
             model = CardModel(id=card.id, name=card.name, enabled=card.enabled)
             self._session.add(model)
 
-        await self._session.flush()
+        self._session.flush()
 
     async def delete(self, card_id: int) -> None:
         """カードを削除"""
@@ -58,8 +58,8 @@ class SqlAlchemyCardRepository:
         model = result.scalar_one_or_none()
 
         if model:
-            await self._session.delete(model)
-            await self._session.flush()
+            self._session.delete(model)
+            self._session.flush()
 
     def _to_domain(self, model: CardModel) -> Card:
         """SQLAlchemyモデルをドメインモデルに変換"""

@@ -60,12 +60,17 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for month in range(1, 13) %}
+                {% set summary = none %}
+                {% for s in dashboard_data.month_summaries %}
+                    {% if s.year_month.month == month %}
+                        {% set summary = s %}
+                    {% endif %}
+                {% endfor %}
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ year }}-{{ "%02d"|format(month) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
-                        {% set summary = dashboard_data.month_summaries|selectattr("year_month.month", "equalto", month)|first %}
                         {% if summary %}
                             {{ "{:,}".format(summary.net_income.amount) }}円
                         {% else %}
