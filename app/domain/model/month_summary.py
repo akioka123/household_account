@@ -28,12 +28,22 @@ class MonthSummary:
         net_income: Money,
         fixed_total: Money,
         variable_total: Money,
+        profit_amount: int,
     ) -> MonthSummary:
-        """月次サマリを計算して作成"""
-        # 負の値を許容する中間計算として、整数計算を行い結果を返す
-        # （損益が負（赤字）になることは正常なビジネスロジック）
-        profit_amount = net_income.amount - fixed_total.amount - variable_total.amount
-        profit = Money.from_amount_unsafe(profit_amount)
+        """月次サマリを計算して作成
+        
+        Args:
+            year_month: 対象年月
+            net_income: 手取り収入合計
+            fixed_total: 固定費合計
+            variable_total: 変動費合計
+            profit_amount: 損益の整数値（負の値も許容）
+        
+        Returns:
+            月次サマリ
+        """
+        # 損益が負の場合は0として扱う（表示用）
+        profit = Money(max(0, profit_amount))
         return MonthSummary(
             year_month=year_month,
             net_income=net_income,

@@ -102,16 +102,17 @@ class GetMonthSummaryUseCase:
             )
 
         # カード変動費を計算（カードごと）
-        variable_card_total = Money(0)
+        variable_card_total_amount = 0
         variable_card_negative = False
         for card_id, statement_total in card_statements_by_card.items():
             fixed_in_card = fixed_in_card_by_card.get(card_id, Money(0))
-            variable_card = MonthCalculator.calculate_variable_card(
+            variable_card_amount = MonthCalculator.calculate_variable_card_amount(
                 statement_total, fixed_in_card
             )
-            variable_card_total = variable_card_total + variable_card
-            if variable_card.amount < 0:
+            variable_card_total_amount += variable_card_amount
+            if variable_card_amount < 0:
                 variable_card_negative = True
+        variable_card_total = Money(max(0, variable_card_total_amount))
 
         # 現金支出を計算
         cash_start = await self._cash_balance_repo.find(ym)
@@ -124,9 +125,10 @@ class GetMonthSummaryUseCase:
         if cash_start:
             withdrawals_total = Money(sum(w.amount.amount for w in withdrawals))
             if next_cash_start:
-                cash_spent = MonthCalculator.calculate_cash_spent(
+                cash_spent_amount = MonthCalculator.calculate_cash_spent_amount(
                     cash_start.amount, withdrawals_total, next_cash_start.amount
                 )
+                cash_spent = Money(max(0, cash_spent_amount))
             else:
                 cash_spent_uncertain = True
                 # 次月月初現金が未登録の場合は、現金支出を未確定扱い
@@ -139,10 +141,11 @@ class GetMonthSummaryUseCase:
         )
 
         # 損益を計算
-        profit = MonthCalculator.calculate_profit(net_income, fixed_total, variable_total)
+        profit_amount = MonthCalculator.calculate_profit_amount(net_income, fixed_total, variable_total)
+        profit = Money(max(0, profit_amount))
 
         # 月次サマリを作成
-        summary = MonthSummary.calculate(ym, net_income, fixed_total, variable_total)
+        summary = MonthSummary.calculate(ym, net_income, fixed_total, variable_total, profit_amount)
 
         # 警告メッセージを生成
         warnings: list[str] = []

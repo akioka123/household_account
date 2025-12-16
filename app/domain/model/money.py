@@ -34,20 +34,3 @@ class Money:
         """右側からの乗算"""
         return self.__mul__(multiplier)
 
-    @classmethod
-    def from_amount_unsafe(cls, amount: int) -> Money:
-        """負の値を許容するMoneyオブジェクトを作成（内部計算用）
-        
-        注意: このメソッドは中間計算で負の値が必要な場合にのみ使用する。
-        最終的な金額は通常のコンストラクタで検証される。
-        
-        Args:
-            amount: 金額（負の値も許容）
-        
-        Returns:
-            Moneyオブジェクト
-        """
-        # バリデーションをスキップして直接インスタンスを作成
-        instance = object.__new__(cls)
-        instance.amount = amount
-        return instance
