@@ -38,3 +38,4 @@ def downgrade() -> None:
     op.drop_index('ix_card_statements_card_id', table_name='card_statements')
     op.drop_index('ix_card_statements_year_month', table_name='card_statements')
     op.drop_table('card_statements')
+

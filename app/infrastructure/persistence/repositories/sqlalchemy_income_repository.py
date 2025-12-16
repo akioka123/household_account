@@ -81,3 +81,4 @@ class SqlAlchemyIncomeRepository:
 
 # Protocol実装として登録
 IncomeRepository.register(SqlAlchemyIncomeRepository)
+

@@ -1,4 +1,4 @@
-"""カード請求のエンティティ"""
+"""月初現金のエンティティ"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,15 +8,12 @@ from app.domain.model.year_month import YearMonth
 
 
 @dataclass(frozen=True)
-class CardStatement:
-    """カード請求（年月×カード：請求総額）"""
+class CashBalance:
+    """月初現金（年月：月初現金）"""
 
     id: int
-    """カード請求ID"""
+    """月初現金ID"""
     year_month: YearMonth
     """対象年月"""
-    card_id: int
-    """カードID"""
     amount: Money
-    """請求総額"""
-
+    """月初現金"""

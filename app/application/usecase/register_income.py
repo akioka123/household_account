@@ -59,3 +59,4 @@ class RegisterIncomeUseCase:
         self._logger.info(
             f"収入登録: {command.year}年{command.month}月", context
         )
+

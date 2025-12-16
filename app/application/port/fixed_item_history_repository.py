@@ -21,3 +21,4 @@ class FixedItemHistoryRepository(Protocol):
     async def save(self, history: FixedItemHistory) -> None:
         """固定費履歴を保存（新規作成）"""
         ...
+

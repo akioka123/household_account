@@ -147,3 +147,4 @@ async def test_get_active_fixed_items_at(
     assert result[0].amount.amount == 100000
     assert result[1].fixed_item_id == 2
     assert result[1].amount.amount == 50000
+

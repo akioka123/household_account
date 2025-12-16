@@ -79,3 +79,4 @@ class GetDashboardDataUseCase:
             annual_net += income.net_total().amount
 
         return annual_gross, annual_net
+

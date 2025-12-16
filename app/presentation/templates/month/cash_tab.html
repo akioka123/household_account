@@ -1,4 +1,172 @@
 <div>
     <h3 class="text-lg font-semibold mb-4">現金</h3>
-    <p class="text-gray-500">※ 後続フェーズで実装予定</p>
+    
+    <!-- 月初現金 -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h4 class="font-medium mb-3 text-gray-700">月初現金</h4>
+        <form 
+            hx-post="/month/{{ year }}/{{ month }}/cash-balance"
+            hx-target="#cash-content"
+            hx-swap="outerHTML"
+            class="flex items-end space-x-3"
+        >
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+                <input 
+                    type="number" 
+                    name="amount" 
+                    value="{% if cash_data.cash_start %}{{ cash_data.cash_start.amount.amount }}{% else %}0{% endif %}"
+                    min="0"
+                    required
+                    class="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                保存
+            </button>
+        </form>
+    </div>
+    
+    <!-- 引出明細 -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h4 class="font-medium mb-3 text-gray-700">引出明細</h4>
+        <form 
+            id="withdrawal-form"
+            hx-post="/month/{{ year }}/{{ month }}/withdrawals"
+            hx-target="#cash-content"
+            hx-swap="outerHTML"
+            class="space-y-3"
+        >
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">日付</label>
+                    <input 
+                        type="date" 
+                        name="withdrawal_date" 
+                        value="{{ year }}-{{ "%02d"|format(month) }}-01"
+                        required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+                    <input 
+                        type="number" 
+                        name="amount" 
+                        min="0"
+                        required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">メモ</label>
+                    <input 
+                        type="text" 
+                        name="note" 
+                        placeholder="（任意）"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        追加
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        {% if cash_data.withdrawals %}
+        <div class="mt-4 space-y-2">
+            {% for withdrawal in cash_data.withdrawals %}
+            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <span class="text-sm text-gray-600">日付:</span>
+                        <span class="ml-2">{{ withdrawal.withdrawal_date.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">金額:</span>
+                        <span class="ml-2 font-semibold">{{ "{:,}".format(withdrawal.amount.amount) }}円</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">メモ:</span>
+                        <span class="ml-2">{{ withdrawal.note or "-" }}</span>
+                    </div>
+                </div>
+                <form 
+                    hx-post="/month/{{ year }}/{{ month }}/withdrawals/{{ withdrawal.id }}/delete"
+                    hx-target="#cash-content"
+                    hx-swap="outerHTML"
+                    class="ml-4"
+                >
+                    <button type="submit" class="text-red-600 hover:text-red-800 px-3 py-2">
+                        削除
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 次月月初現金 -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h4 class="font-medium mb-3 text-gray-700">次月月初現金（{{ next_year }}年{{ next_month }}月）</h4>
+        <form 
+            hx-post="/month/{{ year }}/{{ month }}/cash-balance-next"
+            hx-target="#cash-content"
+            hx-swap="outerHTML"
+            class="flex items-end space-x-3"
+        >
+            <input type="hidden" name="next_year" value="{{ next_year }}">
+            <input type="hidden" name="next_month" value="{{ next_month }}">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+                <input 
+                    type="number" 
+                    name="amount" 
+                    value="{% if cash_data.cash_start_next %}{{ cash_data.cash_start_next.amount.amount }}{% else %}0{% endif %}"
+                    min="0"
+                    required
+                    class="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                保存
+            </button>
+        </form>
+        {% if not cash_data.cash_start_next %}
+        <p class="mt-2 text-sm text-yellow-600">⚠️ 次月月初現金が未登録です。現金支出の計算ができません。</p>
+        {% endif %}
+    </div>
+    
+    <!-- 現金支出計算結果 -->
+    <div id="cash-content" class="mt-6">
+        {% if cash_data.cash_start and cash_data.cash_start_next %}
+        {% set withdrawals_total = cash_data.withdrawals|sum(attribute='amount.amount') %}
+        {% set cash_spent = cash_data.cash_start.amount.amount + withdrawals_total - cash_data.cash_start_next.amount.amount %}
+        <div class="bg-green-50 rounded-lg p-4">
+            <p class="text-sm text-green-800">
+                <strong>現金支出:</strong> {{ "{:,}".format(cash_spent) }}円
+            </p>
+            <p class="text-xs text-green-700 mt-1">
+                （月初現金: {{ "{:,}".format(cash_data.cash_start.amount.amount) }}円 + 引出合計: {{ "{:,}".format(withdrawals_total) }}円 - 次月月初現金: {{ "{:,}".format(cash_data.cash_start_next.amount.amount) }}円）
+            </p>
+        </div>
+        {% elif cash_data.cash_start %}
+        {% set withdrawals_total = cash_data.withdrawals|sum(attribute='amount.amount') %}
+        <div class="bg-yellow-50 rounded-lg p-4">
+            <p class="text-sm text-yellow-800">
+                <strong>現金支出:</strong> 未確定（次月月初現金が未登録）
+            </p>
+            <p class="text-xs text-yellow-700 mt-1">
+                （月初現金: {{ "{:,}".format(cash_data.cash_start.amount.amount) }}円 + 引出合計: {{ "{:,}".format(withdrawals_total) }}円）
+            </p>
+        </div>
+        {% else %}
+        <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-sm text-gray-600">月初現金が登録されていません。</p>
+        </div>
+        {% endif %}
+    </div>
 </div>

@@ -48,3 +48,4 @@ def downgrade() -> None:
     op.drop_index('ix_fixed_item_histories_fixed_item_id', table_name='fixed_item_histories')
     op.drop_table('fixed_item_histories')
     op.drop_table('fixed_items')
+

@@ -16,3 +16,4 @@ class SettingsRepository(Protocol):
     async def save(self, settings: Settings) -> None:
         """設定を保存"""
         ...
+

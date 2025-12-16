@@ -16,3 +16,4 @@ class FixedItem:
     def rename(self, new_name: str) -> FixedItem:
         """項目名を変更（新しいインスタンスを返す）"""
         return FixedItem(id=self.id, name=new_name)
+

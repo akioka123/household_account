@@ -19,3 +19,4 @@ def test_fixed_item_rename() -> None:
     assert renamed.name == "月額家賃"
     # 元のインスタンスは変更されない（immutable）
     assert item.name == "家賃"
+

@@ -27,3 +27,4 @@ class SqlAlchemyMonthSummaryRepository:
 
 # Protocol実装として登録
 MonthSummaryRepository.register(SqlAlchemyMonthSummaryRepository)
+

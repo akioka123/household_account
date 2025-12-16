@@ -27,3 +27,4 @@ class FixedItemHistoryModel(Base):
     """カード紐づけ（任意）"""
     included_in_card: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     """カード請求に含まれる固定費かどうか"""
+

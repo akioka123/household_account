@@ -193,3 +193,4 @@ class ManageFixedItemsUseCase:
             全固定費項目のリスト
         """
         return await self._fixed_item_repo.find_all()
+

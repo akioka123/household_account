@@ -39,3 +39,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table('settings')
     op.drop_table('cards')
+

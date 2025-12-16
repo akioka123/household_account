@@ -119,3 +119,4 @@ async def test_get_dashboard_data_with_data(
     assert len(result.month_summaries) == 2
     assert result.annual_gross == 2000000  # 500000 * 2 + 1000000
     assert result.annual_net == 1600000  # 400000 * 2 + 800000
+

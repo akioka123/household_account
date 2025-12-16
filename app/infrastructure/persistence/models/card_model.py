@@ -17,3 +17,4 @@ class CardModel(Base):
     """カード名"""
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     """有効フラグ"""
+

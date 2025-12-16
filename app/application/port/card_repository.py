@@ -24,3 +24,4 @@ class CardRepository(Protocol):
     async def delete(self, card_id: int) -> None:
         """カードを削除"""
         ...
+

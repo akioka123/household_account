@@ -57,3 +57,4 @@ class SqlAlchemyFixedItemRepository:
 
 # Protocol実装として登録
 FixedItemRepository.register(SqlAlchemyFixedItemRepository)
+

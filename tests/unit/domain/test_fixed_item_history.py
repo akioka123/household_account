@@ -85,3 +85,4 @@ def test_fixed_item_history_is_deleted() -> None:
         included_in_card=False,
     )
     assert active_history.is_deleted() is False
+

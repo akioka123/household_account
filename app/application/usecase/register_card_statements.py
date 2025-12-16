@@ -100,3 +100,4 @@ class RegisterCardStatementsUseCase:
         self._logger.info(
             f"カード請求登録: {year}年{month}月 ({len(commands)}件)", context
         )
+

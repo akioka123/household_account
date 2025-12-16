@@ -68,3 +68,4 @@ class SqlAlchemyCardRepository:
 
 # Protocol実装として登録
 CardRepository.register(SqlAlchemyCardRepository)
+

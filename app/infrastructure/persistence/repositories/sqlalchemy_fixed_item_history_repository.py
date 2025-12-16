@@ -77,3 +77,4 @@ class SqlAlchemyFixedItemHistoryRepository:
 
 # Protocol実装として登録
 FixedItemHistoryRepository.register(SqlAlchemyFixedItemHistoryRepository)
+

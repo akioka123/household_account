@@ -7,12 +7,21 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.port.cash_balance_repository import CashBalanceRepository
 from app.application.port.card_repository import CardRepository
 from app.application.port.card_statement_repository import CardStatementRepository
 from app.application.port.fixed_item_history_repository import FixedItemHistoryRepository
 from app.application.port.fixed_item_repository import FixedItemRepository
 from app.application.port.income_repository import IncomeRepository
 from app.application.port.logger import Logger
+from app.application.port.withdrawal_repository import WithdrawalRepository
+from app.application.usecase.get_month_summary import GetMonthSummaryUseCase
+from app.application.usecase.manage_cash import (
+    AddWithdrawalCommand,
+    DeleteWithdrawalCommand,
+    ManageCashUseCase,
+    UpdateCashBalanceCommand,
+)
 from app.application.usecase.manage_cards import ManageCardsUseCase
 from app.application.usecase.manage_fixed_items import (
     AddFixedItemCommand,
@@ -29,6 +38,9 @@ from app.application.usecase.register_income import (
 )
 from app.domain.model.year_month import YearMonth
 from app.infrastructure.logging.structured_logger import StructuredLogger
+from app.infrastructure.persistence.repositories.sqlalchemy_cash_balance_repository import (
+    SqlAlchemyCashBalanceRepository,
+)
 from app.infrastructure.persistence.repositories.sqlalchemy_card_repository import (
     SqlAlchemyCardRepository,
 )
@@ -43,6 +55,9 @@ from app.infrastructure.persistence.repositories.sqlalchemy_fixed_item_repositor
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_income_repository import (
     SqlAlchemyIncomeRepository,
+)
+from app.infrastructure.persistence.repositories.sqlalchemy_withdrawal_repository import (
+    SqlAlchemyWithdrawalRepository,
 )
 from app.presentation.web.dependencies import get_db
 
@@ -118,6 +133,62 @@ def provide_manage_cards_uc(
     from app.application.usecase.manage_cards import ManageCardsUseCase
 
     return ManageCardsUseCase(card_repo=card_repo, logger=logger)
+
+
+def provide_cash_balance_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> CashBalanceRepository:
+    """CashBalanceRepositoryのDI"""
+    return SqlAlchemyCashBalanceRepository(session)
+
+
+def provide_withdrawal_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> WithdrawalRepository:
+    """WithdrawalRepositoryのDI"""
+    return SqlAlchemyWithdrawalRepository(session)
+
+
+def provide_manage_cash_uc(
+    cash_balance_repo: Annotated[CashBalanceRepository, Depends(provide_cash_balance_repo)],
+    withdrawal_repo: Annotated[WithdrawalRepository, Depends(provide_withdrawal_repo)],
+    logger: Annotated[Logger, Depends(provide_logger)],
+) -> ManageCashUseCase:
+    """ManageCashUseCaseのDI"""
+    from app.application.usecase.manage_cash import ManageCashUseCase
+
+    return ManageCashUseCase(
+        cash_balance_repo=cash_balance_repo,
+        withdrawal_repo=withdrawal_repo,
+        logger=logger,
+    )
+
+
+def provide_get_month_summary_uc(
+    income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)],
+    fixed_item_history_repo: Annotated[
+        FixedItemHistoryRepository, Depends(provide_fixed_item_history_repo)
+    ],
+    card_statement_repo: Annotated[
+        CardStatementRepository, Depends(provide_card_statement_repo)
+    ],
+    cash_balance_repo: Annotated[CashBalanceRepository, Depends(provide_cash_balance_repo)],
+    withdrawal_repo: Annotated[WithdrawalRepository, Depends(provide_withdrawal_repo)],
+    card_repo: Annotated[CardRepository, Depends(provide_card_repo)],
+    logger: Annotated[Logger, Depends(provide_logger)],
+) -> GetMonthSummaryUseCase:
+    """GetMonthSummaryUseCaseのDI"""
+    from app.application.usecase.get_month_summary import GetMonthSummaryUseCase
+
+    return GetMonthSummaryUseCase(
+        income_repo=income_repo,
+        fixed_item_history_repo=fixed_item_history_repo,
+        card_statement_repo=card_statement_repo,
+        cash_balance_repo=cash_balance_repo,
+        withdrawal_repo=withdrawal_repo,
+        card_repo=card_repo,
+        logger=logger,
+    )
 
 
 def provide_card_statement_repo(
@@ -265,11 +336,14 @@ async def summary_tab(
     request: Request,
     year: int,
     month: int,
+    summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)] = None,
 ) -> HTMLResponse:
-    """集計タブコンテンツ（暫定：後続フェーズで実装）"""
+    """集計タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
 
     templates = Jinja2Templates(directory="app/presentation/templates")
+
+    result = await summary_uc.execute(year, month)
 
     return templates.TemplateResponse(
         "month/summary_tab.html",
@@ -277,6 +351,10 @@ async def summary_tab(
             "request": request,
             "year": year,
             "month": month,
+            "summary": result.summary,
+            "warnings": result.warnings,
+            "cash_spent_uncertain": result.cash_spent_uncertain,
+            "variable_card_negative": result.variable_card_negative,
         },
     )
 
@@ -390,11 +468,15 @@ async def cash_tab(
     request: Request,
     year: int,
     month: int,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
 ) -> HTMLResponse:
-    """現金タブコンテンツ（暫定：後続フェーズで実装）"""
+    """現金タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
 
     templates = Jinja2Templates(directory="app/presentation/templates")
+
+    cash_data = await cash_uc.get_cash_data(year, month)
+    next_ym = YearMonth(year, month + 1) if month < 12 else YearMonth(year + 1, 1)
 
     return templates.TemplateResponse(
         "month/cash_tab.html",
@@ -402,6 +484,155 @@ async def cash_tab(
             "request": request,
             "year": year,
             "month": month,
+            "cash_data": cash_data,
+            "next_year": next_ym.year,
+            "next_month": next_ym.month,
+        },
+    )
+
+
+@router.post("/month/{year}/{month}/cash-balance", response_class=HTMLResponse)
+async def save_cash_balance(
+    request: Request,
+    year: int,
+    month: int,
+    amount: int = Form(...),
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
+) -> HTMLResponse:
+    """月初現金を保存"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    command = UpdateCashBalanceCommand(year=year, month=month, amount=amount)
+    await cash_uc.update_cash_balance(command)
+
+    # 現金タブを再取得
+    cash_data = await cash_uc.get_cash_data(year, month)
+    next_ym = YearMonth(year, month + 1) if month < 12 else YearMonth(year + 1, 1)
+
+    return templates.TemplateResponse(
+        "month/cash_tab.html",
+        {
+            "request": request,
+            "year": year,
+            "month": month,
+            "cash_data": cash_data,
+            "next_year": next_ym.year,
+            "next_month": next_ym.month,
+        },
+    )
+
+
+@router.post("/month/{year}/{month}/withdrawals", response_class=HTMLResponse)
+async def save_withdrawal(
+    request: Request,
+    year: int,
+    month: int,
+    withdrawal_date: str = Form(...),
+    amount: int = Form(...),
+    note: str = Form(default=""),
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
+) -> HTMLResponse:
+    """引出明細を保存"""
+    from datetime import date as date_type
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    # 日付文字列をdateオブジェクトに変換
+    withdrawal_date_obj = date_type.fromisoformat(withdrawal_date)
+
+    command = AddWithdrawalCommand(
+        year=year,
+        month=month,
+        withdrawal_date=withdrawal_date_obj,
+        amount=amount,
+        note=note,
+    )
+    await cash_uc.add_withdrawal(command)
+
+    # 現金タブを再取得
+    cash_data = await cash_uc.get_cash_data(year, month)
+    next_ym = YearMonth(year, month + 1) if month < 12 else YearMonth(year + 1, 1)
+
+    return templates.TemplateResponse(
+        "month/cash_tab.html",
+        {
+            "request": request,
+            "year": year,
+            "month": month,
+            "cash_data": cash_data,
+            "next_year": next_ym.year,
+            "next_month": next_ym.month,
+        },
+    )
+
+
+@router.post("/month/{year}/{month}/cash-balance-next", response_class=HTMLResponse)
+async def save_next_cash_balance(
+    request: Request,
+    year: int,
+    month: int,
+    next_year: int = Form(...),
+    next_month: int = Form(...),
+    amount: int = Form(...),
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
+) -> HTMLResponse:
+    """次月月初現金を保存"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    command = UpdateCashBalanceCommand(year=next_year, month=next_month, amount=amount)
+    await cash_uc.update_cash_balance(command)
+
+    # 現金タブを再取得（当月のタブを更新）
+    cash_data = await cash_uc.get_cash_data(year, month)
+    next_ym = YearMonth(next_year, next_month)
+
+    return templates.TemplateResponse(
+        "month/cash_tab.html",
+        {
+            "request": request,
+            "year": year,
+            "month": month,
+            "cash_data": cash_data,
+            "next_year": next_ym.year,
+            "next_month": next_ym.month,
+        },
+    )
+
+
+@router.post("/month/{year}/{month}/withdrawals/{withdrawal_id}/delete", response_class=HTMLResponse)
+async def delete_withdrawal(
+    request: Request,
+    year: int,
+    month: int,
+    withdrawal_id: int,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
+) -> HTMLResponse:
+    """引出明細を削除"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    command = DeleteWithdrawalCommand(withdrawal_id=withdrawal_id)
+    await cash_uc.delete_withdrawal(command)
+
+    # 現金タブを再取得
+    cash_data = await cash_uc.get_cash_data(year, month)
+    next_ym = YearMonth(year, month + 1) if month < 12 else YearMonth(year + 1, 1)
+
+    return templates.TemplateResponse(
+        "month/cash_tab.html",
+        {
+            "request": request,
+            "year": year,
+            "month": month,
+            "cash_data": cash_data,
+            "next_year": next_ym.year,
+            "next_month": next_ym.month,
         },
     )
 
@@ -532,3 +763,4 @@ async def add_fixed_item_history(
             "cards": cards,
         },
     )
+

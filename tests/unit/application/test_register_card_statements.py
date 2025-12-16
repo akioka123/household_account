@@ -93,3 +93,4 @@ async def test_register_card_statements_with_invalid_card(
 
     with pytest.raises(ValueError, match="Card not found"):
         await usecase.execute(2024, 3, commands)
+

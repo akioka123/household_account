@@ -20,3 +20,4 @@ class FixedItemRepository(Protocol):
     async def save(self, fixed_item: FixedItem) -> None:
         """固定費項目を保存（新規作成または更新）"""
         ...
+

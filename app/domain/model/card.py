@@ -26,3 +26,4 @@ class Card:
     def rename(self, new_name: str) -> Card:
         """カード名を変更（新しいインスタンスを返す）"""
         return Card(id=self.id, name=new_name, enabled=self.enabled)
+

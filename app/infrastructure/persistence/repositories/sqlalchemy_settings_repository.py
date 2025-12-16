@@ -53,3 +53,4 @@ class SqlAlchemySettingsRepository:
 
 # Protocol実装として登録
 SettingsRepository.register(SqlAlchemySettingsRepository)
+

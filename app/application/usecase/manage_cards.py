@@ -70,3 +70,4 @@ class ManageCardsUseCase:
     async def get_all_cards(self) -> list[Card]:
         """全カードを取得"""
         return await self._card_repo.find_all()
+

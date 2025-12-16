@@ -19,3 +19,4 @@ def test_card_statement_creation() -> None:
     assert statement.year_month == ym
     assert statement.card_id == 2
     assert statement.amount.amount == 50000
+

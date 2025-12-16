@@ -88,3 +88,4 @@ async def dashboard(
             "dashboard_data": dashboard_data,
         },
     )
+

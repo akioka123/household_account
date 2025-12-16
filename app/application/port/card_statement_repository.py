@@ -21,3 +21,4 @@ class CardStatementRepository(Protocol):
     async def delete(self, statement_id: int) -> None:
         """カード請求を削除"""
         ...
+

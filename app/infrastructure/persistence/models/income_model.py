@@ -23,3 +23,4 @@ class IncomeModel(Base):
     """賞与額面"""
     bonus_net: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     """賞与手取り"""
+

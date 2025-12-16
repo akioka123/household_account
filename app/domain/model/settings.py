@@ -35,3 +35,4 @@ class Settings:
             max_variable_items=max_variable_items or self.max_variable_items,
             max_fixed_items=max_fixed_items or self.max_fixed_items,
         )
+

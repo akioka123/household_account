@@ -38,3 +38,4 @@ def test_settings_update_limits() -> None:
     updated = settings.update_limits(max_variable_items=30)
     assert updated.max_variable_items == 30
     assert updated.max_fixed_items == 20
+

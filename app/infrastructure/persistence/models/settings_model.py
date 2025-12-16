@@ -18,3 +18,4 @@ class SettingsModel(Base):
     """変動費最大件数"""
     max_fixed_items: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
     """固定費最大件数"""
+

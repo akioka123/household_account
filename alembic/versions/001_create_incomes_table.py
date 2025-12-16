@@ -36,3 +36,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index('ix_incomes_year_month', table_name='incomes')
     op.drop_table('incomes')
+

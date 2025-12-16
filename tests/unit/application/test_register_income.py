@@ -93,3 +93,4 @@ async def test_register_income_without_bonus(
     income = call_args[1]
     assert income.bonus_gross.amount == 0
     assert income.bonus_net.amount == 0
+

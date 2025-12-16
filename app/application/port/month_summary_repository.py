@@ -17,3 +17,4 @@ class MonthSummaryRepository(Protocol):
     async def find(self, ym: YearMonth) -> MonthSummary | None:
         """指定年月のサマリを取得"""
         ...
+

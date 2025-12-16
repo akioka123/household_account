@@ -35,3 +35,4 @@ def test_card_rename() -> None:
     assert renamed.name == "新しいカード名"
     assert renamed.id == card.id
     assert renamed.enabled == card.enabled
+

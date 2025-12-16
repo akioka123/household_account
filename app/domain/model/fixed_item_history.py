@@ -31,3 +31,4 @@ class FixedItemHistory:
     def is_deleted(self) -> bool:
         """削除済みかどうかを判定（金額0の場合）"""
         return self.amount.amount == 0
+

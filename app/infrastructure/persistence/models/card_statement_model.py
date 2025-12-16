@@ -25,3 +25,4 @@ class CardStatementModel(Base):
     __table_args__ = (
         UniqueConstraint("year_month", "card_id", name="uq_card_statements_year_month_card"),
     )
+
