@@ -34,6 +34,7 @@ def fake_fixed_item_history_repo() -> FixedItemHistoryRepository:
     """Fake FixedItemHistoryRepository"""
     repo = MagicMock(spec=FixedItemHistoryRepository)
     repo.find_by_fixed_item_id = AsyncMock(return_value=[])
+    repo.find_all = AsyncMock(return_value=[])
     repo.find_active_at = AsyncMock(return_value=[])
     repo.save = AsyncMock()
     return repo
@@ -78,6 +79,8 @@ async def test_add_fixed_item_history(
     # 固定費項目が存在することをモック
     fixed_item = FixedItem(id=1, name="家賃")
     fake_fixed_item_repo.find_by_id = AsyncMock(return_value=fixed_item)
+    # find_all()が呼ばれることを確認（ID生成用）
+    fake_fixed_item_history_repo.find_all = AsyncMock(return_value=[])
 
     usecase = ManageFixedItemsUseCase(
         fixed_item_repo=fake_fixed_item_repo,
@@ -95,11 +98,70 @@ async def test_add_fixed_item_history(
     )
     await usecase.add_fixed_item_history(command)
 
+    # find_all()が呼ばれたことを確認（グローバルなID生成のため）
+    fake_fixed_item_history_repo.find_all.assert_called_once()
     fake_fixed_item_history_repo.save.assert_called_once()
     call_args = fake_fixed_item_history_repo.save.call_args[0]
     assert isinstance(call_args[0], FixedItemHistory)
     assert call_args[0].fixed_item_id == 1
     assert call_args[0].amount.amount == 100000
+    assert call_args[0].id == 1  # 最初の履歴なのでIDは1
+
+
+@pytest.mark.asyncio
+async def test_add_fixed_item_history_with_existing_histories(
+    fake_fixed_item_repo: FixedItemRepository,
+    fake_fixed_item_history_repo: FixedItemHistoryRepository,
+    fake_logger: Logger,
+) -> None:
+    """固定費履歴を追加（既存の履歴がある場合、IDがグローバルに一意になることを確認）"""
+    # 固定費項目が存在することをモック
+    fixed_item = FixedItem(id=1, name="家賃")
+    fake_fixed_item_repo.find_by_id = AsyncMock(return_value=fixed_item)
+    
+    # 既存の履歴（異なる固定費項目の履歴を含む）
+    existing_history1 = FixedItemHistory(
+        id=5,
+        fixed_item_id=2,  # 異なる固定費項目
+        effective_from=YearMonth(2024, 1),
+        amount=Money(50000),
+        card_id=None,
+        included_in_card=False,
+    )
+    existing_history2 = FixedItemHistory(
+        id=10,
+        fixed_item_id=3,  # 異なる固定費項目
+        effective_from=YearMonth(2024, 2),
+        amount=Money(30000),
+        card_id=None,
+        included_in_card=False,
+    )
+    fake_fixed_item_history_repo.find_all = AsyncMock(
+        return_value=[existing_history1, existing_history2]
+    )
+
+    usecase = ManageFixedItemsUseCase(
+        fixed_item_repo=fake_fixed_item_repo,
+        fixed_item_history_repo=fake_fixed_item_history_repo,
+        logger=fake_logger,
+    )
+
+    command = AddFixedItemHistoryCommand(
+        fixed_item_id=1,
+        year=2024,
+        month=3,
+        amount=100000,
+        card_id=None,
+        included_in_card=False,
+    )
+    await usecase.add_fixed_item_history(command)
+
+    # find_all()が呼ばれたことを確認
+    fake_fixed_item_history_repo.find_all.assert_called_once()
+    fake_fixed_item_history_repo.save.assert_called_once()
+    call_args = fake_fixed_item_history_repo.save.call_args[0]
+    # 最大ID（10）の次なので、IDは11になる
+    assert call_args[0].id == 11
 
 
 @pytest.mark.asyncio

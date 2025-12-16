@@ -1,6 +1,7 @@
 """ManageCashUseCaseのテスト"""
 from __future__ import annotations
 
+from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -25,6 +26,7 @@ def fake_cash_balance_repo() -> CashBalanceRepository:
     """Fake CashBalanceRepository"""
     repo = MagicMock(spec=CashBalanceRepository)
     repo.find = AsyncMock(return_value=None)
+    repo.find_all = AsyncMock(return_value=[])
     repo.save = AsyncMock()
     return repo
 
@@ -34,6 +36,7 @@ def fake_withdrawal_repo() -> WithdrawalRepository:
     """Fake WithdrawalRepository"""
     repo = MagicMock(spec=WithdrawalRepository)
     repo.find_by_year_month = AsyncMock(return_value=[])
+    repo.find_all = AsyncMock(return_value=[])
     repo.save = AsyncMock()
     repo.delete = AsyncMock()
     return repo
@@ -54,6 +57,9 @@ async def test_save_cash_balance_new(
     fake_logger: Logger,
 ) -> None:
     """現金残高を新規作成"""
+    # find_all()が呼ばれることを確認（ID生成用）
+    fake_cash_balance_repo.find_all = AsyncMock(return_value=[])
+    
     usecase = ManageCashUseCase(
         cash_balance_repo=fake_cash_balance_repo,
         withdrawal_repo=fake_withdrawal_repo,
@@ -63,10 +69,13 @@ async def test_save_cash_balance_new(
     command = SaveCashBalanceCommand(year=2024, month=3, amount=100000)
     await usecase.save_cash_balance(command)
 
+    # find_all()が呼ばれたことを確認（グローバルなID生成のため）
+    fake_cash_balance_repo.find_all.assert_called_once()
     fake_cash_balance_repo.save.assert_called_once()
     call_args = fake_cash_balance_repo.save.call_args[0]
     assert isinstance(call_args[0], CashBalance)
     assert call_args[0].amount.amount == 100000
+    assert call_args[0].id == 1  # 最初の残高なのでIDは1
 
 
 @pytest.mark.asyncio
@@ -102,6 +111,9 @@ async def test_save_withdrawal(
     fake_logger: Logger,
 ) -> None:
     """引出明細を保存"""
+    # find_all()が呼ばれることを確認（ID生成用）
+    fake_withdrawal_repo.find_all = AsyncMock(return_value=[])
+    
     usecase = ManageCashUseCase(
         cash_balance_repo=fake_cash_balance_repo,
         withdrawal_repo=fake_withdrawal_repo,
@@ -113,12 +125,51 @@ async def test_save_withdrawal(
     )
     await usecase.save_withdrawal(command)
 
+    # find_all()が呼ばれたことを確認（グローバルなID生成のため）
+    fake_withdrawal_repo.find_all.assert_called_once()
     fake_withdrawal_repo.save.assert_called_once()
     call_args = fake_withdrawal_repo.save.call_args[0]
     assert isinstance(call_args[0], Withdrawal)
     assert call_args[0].date == 15
     assert call_args[0].amount.amount == 50000
     assert call_args[0].note == "買い物"
+    assert call_args[0].id == 1  # 最初の引出なのでIDは1
+
+
+@pytest.mark.asyncio
+async def test_save_withdrawal_with_existing_withdrawals(
+    fake_cash_balance_repo: CashBalanceRepository,
+    fake_withdrawal_repo: WithdrawalRepository,
+    fake_logger: Logger,
+) -> None:
+    """引出明細を保存（既存の引出がある場合、IDがグローバルに一意になることを確認）"""
+    # 既存の引出（異なる月の引出を含む）
+    existing_withdrawal = Withdrawal(
+        id=12,
+        year_month=YearMonth(2024, 2),  # 異なる月
+        withdrawal_date=date(2024, 2, 10),
+        amount=Money(30000),
+        note="既存の引出",
+    )
+    fake_withdrawal_repo.find_all = AsyncMock(return_value=[existing_withdrawal])
+    
+    usecase = ManageCashUseCase(
+        cash_balance_repo=fake_cash_balance_repo,
+        withdrawal_repo=fake_withdrawal_repo,
+        logger=fake_logger,
+    )
+
+    command = SaveWithdrawalCommand(
+        year=2024, month=3, date=15, amount=50000, note="買い物"
+    )
+    await usecase.save_withdrawal(command)
+
+    # find_all()が呼ばれたことを確認
+    fake_withdrawal_repo.find_all.assert_called_once()
+    fake_withdrawal_repo.save.assert_called_once()
+    call_args = fake_withdrawal_repo.save.call_args[0]
+    # 最大ID（12）の次なので、IDは13になる
+    assert call_args[0].id == 13
 
 
 @pytest.mark.asyncio

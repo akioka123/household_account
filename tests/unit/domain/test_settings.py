@@ -39,3 +39,28 @@ def test_settings_update_limits() -> None:
     assert updated.max_variable_items == 30
     assert updated.max_fixed_items == 20
 
+
+def test_settings_update_limits_with_zero() -> None:
+    """上限設定を更新（0を渡した場合、例外が発生することを確認）"""
+    settings = Settings.default()
+    # 0を渡した場合、__post_init__で例外が発生する
+    with pytest.raises(ValueError, match="max_variable_items must be >= 1"):
+        settings.update_limits(max_variable_items=0)
+    
+    with pytest.raises(ValueError, match="max_fixed_items must be >= 1"):
+        settings.update_limits(max_fixed_items=0)
+
+
+def test_settings_update_limits_partial() -> None:
+    """上限設定を部分的に更新"""
+    settings = Settings(max_variable_items=20, max_fixed_items=30)
+    # max_variable_itemsのみ更新
+    updated = settings.update_limits(max_variable_items=25)
+    assert updated.max_variable_items == 25
+    assert updated.max_fixed_items == 30
+    
+    # max_fixed_itemsのみ更新
+    updated2 = settings.update_limits(max_fixed_items=35)
+    assert updated2.max_variable_items == 20
+    assert updated2.max_fixed_items == 35
+
