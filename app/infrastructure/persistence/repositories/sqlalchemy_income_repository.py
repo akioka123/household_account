@@ -18,7 +18,7 @@ class SqlAlchemyIncomeRepository:
 
     async def upsert(self, ym: YearMonth, income: Income) -> None:
         """収入を登録または更新"""
-        ym_str = ym.to_string()
+        ym_str = f"{ym.year:04d}-{ym.month:02d}"
         stmt = select(IncomeModel).where(IncomeModel.year_month == ym_str)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -44,7 +44,7 @@ class SqlAlchemyIncomeRepository:
 
     async def find(self, ym: YearMonth) -> Income | None:
         """指定年月の収入を取得"""
-        ym_str = ym.to_string()
+        ym_str = f"{ym.year:04d}-{ym.month:02d}"
         stmt = select(IncomeModel).where(IncomeModel.year_month == ym_str)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()

@@ -107,10 +107,8 @@ class ManageFixedItemsUseCase:
         if fixed_item is None:
             raise ValueError(f"FixedItem not found: {command.fixed_item_id}")
 
-        # 最大IDを取得して次のIDを決定（簡易実装）
-        all_histories = await self._fixed_item_history_repo.find_by_fixed_item_id(
-            command.fixed_item_id
-        )
+        # 最大IDを取得して次のIDを決定（全データから取得してグローバルな一意性を保証）
+        all_histories = await self._fixed_item_history_repo.find_all()
         next_id = max([h.id for h in all_histories], default=0) + 1
 
         effective_from = YearMonth(command.year, command.month)

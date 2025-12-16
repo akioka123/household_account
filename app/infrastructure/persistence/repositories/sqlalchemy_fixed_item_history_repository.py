@@ -30,6 +30,14 @@ class SqlAlchemyFixedItemHistoryRepository:
 
         return [self._to_domain(model) for model in models]
 
+    async def find_all(self) -> list[FixedItemHistory]:
+        """全固定費履歴を取得"""
+        stmt = select(FixedItemHistoryModel).order_by(FixedItemHistoryModel.id)
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
+
     async def find_active_at(self, ym: YearMonth) -> list[FixedItemHistory]:
         """指定年月で有効な履歴を取得"""
         ym_str = f"{ym.year:04d}-{ym.month:02d}"

@@ -14,6 +14,10 @@ class FixedItemHistoryRepository(Protocol):
         """固定費項目IDで履歴を取得（適用開始年月順）"""
         ...
 
+    async def find_all(self) -> list[FixedItemHistory]:
+        """全固定費履歴を取得"""
+        ...
+
     async def find_active_at(self, ym: YearMonth) -> list[FixedItemHistory]:
         """指定年月で有効な履歴を取得"""
         ...
