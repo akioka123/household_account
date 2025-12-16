@@ -27,8 +27,11 @@ class MonthCalculator:
         
         Returns:
             損益（手取り収入 - 固定費 - 変動費）
+            注意: 支出が収入を上回る場合、負の値（赤字）になる可能性がある
         """
-        return net_income - fixed_total - variable_total
+        # 負の値を許容する中間計算として、整数計算を行い結果を返す
+        result_amount = net_income.amount - fixed_total.amount - variable_total.amount
+        return Money.from_amount_unsafe(result_amount)
 
     @staticmethod
     def calculate_variable_total(
@@ -59,8 +62,11 @@ class MonthCalculator:
         
         Returns:
             カード変動費（カード請求 - カード固定費）
+            注意: 固定費がカード請求を上回る場合、負の値になる可能性がある
         """
-        return card_statements_total - fixed_in_card_total
+        # 負の値を許容する中間計算として、整数計算を行い結果を返す
+        result_amount = card_statements_total.amount - fixed_in_card_total.amount
+        return Money.from_amount_unsafe(result_amount)
 
     @staticmethod
     def calculate_cash_spent(
@@ -77,5 +83,8 @@ class MonthCalculator:
         
         Returns:
             現金支出（月初現金 + 引出 - 次月月初現金）
+            注意: 次月月初現金が月初現金+引出を上回る場合、負の値になる可能性がある
         """
-        return cash_start + withdrawals_total - next_cash_start
+        # 負の値を許容する中間計算として、整数計算を行い結果を返す
+        result_amount = cash_start.amount + withdrawals_total.amount - next_cash_start.amount
+        return Money.from_amount_unsafe(result_amount)

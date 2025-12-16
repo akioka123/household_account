@@ -30,7 +30,10 @@ class MonthSummary:
         variable_total: Money,
     ) -> MonthSummary:
         """月次サマリを計算して作成"""
-        profit = net_income - fixed_total - variable_total
+        # 負の値を許容する中間計算として、整数計算を行い結果を返す
+        # （損益が負（赤字）になることは正常なビジネスロジック）
+        profit_amount = net_income.amount - fixed_total.amount - variable_total.amount
+        profit = Money.from_amount_unsafe(profit_amount)
         return MonthSummary(
             year_month=year_month,
             net_income=net_income,
