@@ -25,6 +25,14 @@ class SqlAlchemyCardStatementRepository:
 
         return [self._to_domain(model) for model in models]
 
+    async def find_all(self) -> list[CardStatement]:
+        """全カード請求を取得"""
+        stmt = select(CardStatementModel).order_by(CardStatementModel.id)
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
+
     async def save(self, statement: CardStatement) -> None:
         """カード請求を保存（新規作成または更新）"""
         ym_str = f"{statement.year_month.year:04d}-{statement.year_month.month:02d}"

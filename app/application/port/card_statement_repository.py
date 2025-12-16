@@ -14,6 +14,10 @@ class CardStatementRepository(Protocol):
         """指定年月のカード請求を取得"""
         ...
 
+    async def find_all(self) -> list[CardStatement]:
+        """全カード請求を取得"""
+        ...
+
     async def save(self, statement: CardStatement) -> None:
         """カード請求を保存（新規作成または更新）"""
         ...

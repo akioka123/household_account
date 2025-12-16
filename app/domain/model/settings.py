@@ -32,7 +32,7 @@ class Settings:
     ) -> Settings:
         """上限設定を更新（新しいインスタンスを返す）"""
         return Settings(
-            max_variable_items=max_variable_items or self.max_variable_items,
-            max_fixed_items=max_fixed_items or self.max_fixed_items,
+            max_variable_items=max_variable_items if max_variable_items is not None else self.max_variable_items,
+            max_fixed_items=max_fixed_items if max_fixed_items is not None else self.max_fixed_items,
         )
 

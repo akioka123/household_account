@@ -29,6 +29,14 @@ class SqlAlchemyWithdrawalRepository:
 
         return [self._to_domain(model) for model in models]
 
+    async def find_all(self) -> list[Withdrawal]:
+        """全引出明細を取得"""
+        stmt = select(WithdrawalModel).order_by(WithdrawalModel.id)
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
+
     async def save(self, withdrawal: Withdrawal) -> None:
         """引出明細を保存（新規作成または更新）"""
         ym_str = f"{withdrawal.year_month.year:04d}-{withdrawal.year_month.month:02d}"

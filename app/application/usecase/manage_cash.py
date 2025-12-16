@@ -125,8 +125,8 @@ class ManageCashUseCase:
         """
         ym = YearMonth(command.year, command.month)
 
-        # 最大IDを取得して次のIDを決定（簡易実装）
-        all_withdrawals = await self._withdrawal_repo.find_by_year_month(ym)
+        # 最大IDを取得して次のIDを決定（全データから取得してグローバルな一意性を保証）
+        all_withdrawals = await self._withdrawal_repo.find_all()
         next_id = max([w.id for w in all_withdrawals], default=0) + 1
 
         withdrawal = Withdrawal(

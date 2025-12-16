@@ -54,8 +54,9 @@ class RegisterCardStatementsUseCase:
         existing_statements = await self._card_statement_repo.find_by_year_month(ym)
         existing_by_card_id = {stmt.card_id: stmt for stmt in existing_statements}
 
-        # 最大IDを取得して次のIDを決定（簡易実装）
-        max_id = max([stmt.id for stmt in existing_statements], default=0)
+        # 最大IDを取得して次のIDを決定（全データから取得してグローバルな一意性を保証）
+        all_statements = await self._card_statement_repo.find_all()
+        max_id = max([stmt.id for stmt in all_statements], default=0)
         next_id = max_id + 1
 
         # 各コマンドを処理

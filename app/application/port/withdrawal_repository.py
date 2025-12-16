@@ -14,6 +14,10 @@ class WithdrawalRepository(Protocol):
         """指定年月の引出明細を取得（日付順）"""
         ...
 
+    async def find_all(self) -> list[Withdrawal]:
+        """全引出明細を取得"""
+        ...
+
     async def save(self, withdrawal: Withdrawal) -> None:
         """引出明細を保存（新規作成または更新）"""
         ...
