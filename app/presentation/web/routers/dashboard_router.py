@@ -83,7 +83,7 @@ async def dashboard(
         {
             "request": request,
             "year": year,
-            "current_year": year,
+            "current_year": current_year,
             "years": years,
             "dashboard_data": dashboard_data,
         },

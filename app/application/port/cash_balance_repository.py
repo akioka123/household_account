@@ -14,6 +14,10 @@ class CashBalanceRepository(Protocol):
         """指定年月の月初現金を取得"""
         ...
 
+    async def find_all(self) -> list[CashBalance]:
+        """全月初現金を取得"""
+        ...
+
     async def save(self, balance: CashBalance) -> None:
         """月初現金を保存（新規作成または更新）"""
         ...

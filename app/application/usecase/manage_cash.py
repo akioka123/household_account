@@ -94,9 +94,11 @@ class ManageCashUseCase:
                 amount=Money(command.amount),
             )
         else:
-            # 新規作成（簡易実装：IDは1から開始）
+            # 新規作成：最大IDを取得して次のIDを決定
+            all_balances = await self._cash_balance_repo.find_all()
+            next_id = max([b.id for b in all_balances], default=0) + 1
             balance = CashBalance(
-                id=1,
+                id=next_id,
                 year_month=ym,
                 amount=Money(command.amount),
             )

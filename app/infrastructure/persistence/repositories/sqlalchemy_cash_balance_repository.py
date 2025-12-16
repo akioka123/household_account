@@ -28,6 +28,14 @@ class SqlAlchemyCashBalanceRepository:
 
         return self._to_domain(model)
 
+    async def find_all(self) -> list[CashBalance]:
+        """全月初現金を取得"""
+        stmt = select(CashBalanceModel).order_by(CashBalanceModel.id)
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
+
     async def save(self, balance: CashBalance) -> None:
         """月初現金を保存（新規作成または更新）"""
         ym_str = f"{balance.year_month.year:04d}-{balance.year_month.month:02d}"
