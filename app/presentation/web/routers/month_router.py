@@ -294,12 +294,12 @@ async def register_income(
     request: Request,
     year: int,
     month: int,
+    usecase: Annotated[RegisterIncomeUseCase, Depends(provide_register_income_uc)],
+    income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)],
     salary_gross: int = Form(...),
     salary_net: int = Form(...),
     bonus_gross: int = Form(default=0),
     bonus_net: int = Form(default=0),
-    usecase: Annotated[RegisterIncomeUseCase, Depends(provide_register_income_uc)] = None,
-    income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)] = None,
 ) -> HTMLResponse:
     """収入登録"""
     from fastapi.templating import Jinja2Templates
@@ -336,7 +336,7 @@ async def summary_tab(
     request: Request,
     year: int,
     month: int,
-    summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)] = None,
+    summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)],
 ) -> HTMLResponse:
     """集計タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
@@ -366,8 +366,8 @@ async def variable_tab(
     month: int,
     card_statement_repo: Annotated[
         CardStatementRepository, Depends(provide_card_statement_repo)
-    ] = None,
-    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)] = None,
+    ],
+    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
 ) -> HTMLResponse:
     """変動費タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
@@ -397,11 +397,11 @@ async def register_card_statements(
     month: int,
     usecase: Annotated[
         RegisterCardStatementsUseCase, Depends(provide_register_card_statements_uc)
-    ] = None,
+    ],
     card_statement_repo: Annotated[
         CardStatementRepository, Depends(provide_card_statement_repo)
-    ] = None,
-    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)] = None,
+    ],
+    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
 ) -> HTMLResponse:
     """カード請求を登録"""
     from fastapi.templating import Jinja2Templates
@@ -468,7 +468,7 @@ async def cash_tab(
     request: Request,
     year: int,
     month: int,
-    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)],
 ) -> HTMLResponse:
     """現金タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
@@ -496,8 +496,8 @@ async def save_cash_balance(
     request: Request,
     year: int,
     month: int,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)],
     amount: int = Form(...),
-    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
 ) -> HTMLResponse:
     """月初現金を保存"""
     from fastapi.templating import Jinja2Templates
@@ -529,10 +529,10 @@ async def save_withdrawal(
     request: Request,
     year: int,
     month: int,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)],
     withdrawal_date: str = Form(...),
     amount: int = Form(...),
     note: str = Form(default=""),
-    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
 ) -> HTMLResponse:
     """引出明細を保存"""
     from datetime import date as date_type
@@ -574,10 +574,10 @@ async def save_next_cash_balance(
     request: Request,
     year: int,
     month: int,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)],
     next_year: int = Form(...),
     next_month: int = Form(...),
     amount: int = Form(...),
-    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
 ) -> HTMLResponse:
     """次月月初現金を保存"""
     from fastapi.templating import Jinja2Templates
@@ -610,7 +610,7 @@ async def delete_withdrawal(
     year: int,
     month: int,
     withdrawal_id: int,
-    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)] = None,
+    cash_uc: Annotated[ManageCashUseCase, Depends(provide_manage_cash_uc)],
 ) -> HTMLResponse:
     """引出明細を削除"""
     from fastapi.templating import Jinja2Templates
@@ -642,8 +642,8 @@ async def fixed_tab(
     request: Request,
     year: int,
     month: int,
-    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)] = None,
-    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)] = None,
+    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)],
+    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
 ) -> HTMLResponse:
     """固定費タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
@@ -677,9 +677,9 @@ async def add_fixed_item(
     request: Request,
     year: int,
     month: int,
+    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)],
+    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
     name: str = Form(...),
-    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)] = None,
-    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)] = None,
 ) -> HTMLResponse:
     """固定費項目を追加"""
     from fastapi.templating import Jinja2Templates
@@ -712,14 +712,14 @@ async def add_fixed_item_history(
     request: Request,
     year: int,
     month: int,
+    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)],
+    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
     fixed_item_id: int = Form(...),
     effective_year: int = Form(...),
     effective_month: int = Form(...),
     amount: int = Form(...),
     card_id: str = Form(default=""),
     included_in_card: str = Form(default="false"),
-    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)] = None,
-    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)] = None,
 ) -> HTMLResponse:
     """固定費履歴を追加"""
     from fastapi.templating import Jinja2Templates

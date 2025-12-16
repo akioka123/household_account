@@ -108,8 +108,8 @@ async def settings_page(
 @router.post("/settings/cards", response_class=HTMLResponse)
 async def create_card(
     request: Request,
-    name: str = Form(...),
     card_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
+    name: str = Form(...),
 ) -> HTMLResponse:
     """カード作成"""
     from fastapi.templating import Jinja2Templates
@@ -166,9 +166,9 @@ async def toggle_card(
 @router.post("/settings/limits", response_class=HTMLResponse)
 async def update_limits(
     request: Request,
+    limits_uc: Annotated[UpdateLimitsUseCase, Depends(provide_update_limits_uc)],
     max_variable_items: int = Form(...),
     max_fixed_items: int = Form(...),
-    limits_uc: Annotated[UpdateLimitsUseCase, Depends(provide_update_limits_uc)],
 ) -> HTMLResponse:
     """上限設定更新"""
     from fastapi.templating import Jinja2Templates
