@@ -60,6 +60,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_withdrawal_repositor
     SqlAlchemyWithdrawalRepository,
 )
 from app.presentation.web.dependencies import get_db
+from app.presentation.web.helpers import get_years_with_data
 
 router = APIRouter()
 
@@ -247,6 +248,11 @@ async def month_page(
     prev_ym = YearMonth(year, month - 1) if month > 1 else YearMonth(year - 1, 12)
     next_ym = YearMonth(year, month + 1) if month < 12 else YearMonth(year + 1, 1)
 
+    # ヘッダー用のデータを準備
+    current_year = datetime.now().year
+    years_with_data = set()  # TODO: 後続フェーズで実装
+    years = get_years_with_data(current_year, years_with_data)
+
     return templates.TemplateResponse(
         "month/index.html",
         {
@@ -259,6 +265,8 @@ async def month_page(
             "next_year": next_ym.year,
             "next_month": next_ym.month,
             "income": income,
+            "current_year": current_year,
+            "years": years,
         },
     )
 
