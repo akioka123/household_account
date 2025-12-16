@@ -126,7 +126,7 @@ class GetMonthSummaryUseCase:
             withdrawals_total = Money(sum(w.amount.amount for w in withdrawals))
             if next_cash_start:
                 cash_spent_amount = MonthCalculator.calculate_cash_spent_amount(
-                    cash_start.amount, withdrawals_total, next_cash_start.amount
+                    cash_start, withdrawals_total, next_cash_start
                 )
                 cash_spent = Money(max(0, cash_spent_amount))
             else:
