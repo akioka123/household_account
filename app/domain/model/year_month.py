@@ -26,7 +26,7 @@ class YearMonth:
 
     def to_string(self) -> str:
         """YYYY-MM形式の文字列に変換"""
-        return f"{self.year}-{self.month:02d}"
+        return f"{self.year:04d}-{self.month:02d}"
 
     @staticmethod
     def from_string(ym_str: str) -> YearMonth:
