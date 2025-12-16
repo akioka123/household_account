@@ -50,7 +50,3 @@ class SqlAlchemySettingsRepository:
 
         self._session.flush()
 
-
-# Protocol実装として登録
-SettingsRepository.register(SqlAlchemySettingsRepository)
-

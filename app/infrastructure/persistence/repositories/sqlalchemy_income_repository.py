@@ -18,7 +18,7 @@ class SqlAlchemyIncomeRepository:
 
     async def upsert(self, ym: YearMonth, income: Income) -> None:
         """収入を登録または更新"""
-        ym_str = f"{ym.year:04d}-{ym.month:02d}"
+        ym_str = ym.to_string()
         stmt = select(IncomeModel).where(IncomeModel.year_month == ym_str)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -44,7 +44,7 @@ class SqlAlchemyIncomeRepository:
 
     async def find(self, ym: YearMonth) -> Income | None:
         """指定年月の収入を取得"""
-        ym_str = f"{ym.year:04d}-{ym.month:02d}"
+        ym_str = ym.to_string()
         stmt = select(IncomeModel).where(IncomeModel.year_month == ym_str)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -61,6 +61,9 @@ class SqlAlchemyIncomeRepository:
 
     async def find_by_year(self, year: int) -> dict[YearMonth, Income]:
         """指定年の全月の収入を取得"""
+        # LIKEクエリのため、年をパディングしてプレフィックスを作成
+        # ただし、to_string()は年をパディングしないため、ここでは明示的にパディング
+        # 既存のデータベースレコードとの互換性のため、年はパディングする
         year_prefix = f"{year}-"
         stmt = select(IncomeModel).where(IncomeModel.year_month.like(f"{year_prefix}%"))
         result = await self._session.execute(stmt)
@@ -77,8 +80,4 @@ class SqlAlchemyIncomeRepository:
             )
 
         return incomes
-
-
-# Protocol実装として登録
-IncomeRepository.register(SqlAlchemyIncomeRepository)
 

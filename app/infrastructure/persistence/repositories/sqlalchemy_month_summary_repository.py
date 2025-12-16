@@ -118,7 +118,7 @@ class SqlAlchemyMonthSummaryRepository:
             withdrawals_total = Money(sum(w.amount.amount for w in withdrawals))
             if next_cash_start:
                 cash_spent_amount = MonthCalculator.calculate_cash_spent_amount(
-                    cash_start, withdrawals_total, next_cash_start
+                    cash_start.amount, withdrawals_total, next_cash_start.amount
                 )
                 cash_spent = Money(max(0, cash_spent_amount))
             else:
@@ -137,8 +137,4 @@ class SqlAlchemyMonthSummaryRepository:
         summary = MonthSummary.calculate(ym, net_income, fixed_total, variable_total, profit_amount)
 
         return summary
-
-
-# Protocol実装として登録
-MonthSummaryRepository.register(SqlAlchemyMonthSummaryRepository)
 

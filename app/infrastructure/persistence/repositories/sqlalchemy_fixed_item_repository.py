@@ -54,7 +54,3 @@ class SqlAlchemyFixedItemRepository:
         """SQLAlchemyモデルをドメインモデルに変換"""
         return FixedItem(id=model.id, name=model.name)
 
-
-# Protocol実装として登録
-FixedItemRepository.register(SqlAlchemyFixedItemRepository)
-

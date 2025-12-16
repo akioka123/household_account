@@ -88,7 +88,3 @@ class SqlAlchemyWithdrawalRepository:
             amount=Money(model.amount),
             note=model.note,
         )
-
-
-# Protocol実装として登録
-WithdrawalRepository.register(SqlAlchemyWithdrawalRepository)

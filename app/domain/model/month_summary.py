@@ -42,8 +42,8 @@ class MonthSummary:
         Returns:
             月次サマリ
         """
-        # 損益が負の場合は0として扱う（表示用）
-        profit = Money(max(0, profit_amount))
+        # 損益は負の値も保持する（損失を正確に表現するため）
+        profit = Money(profit_amount)
         return MonthSummary(
             year_month=year_month,
             net_income=net_income,

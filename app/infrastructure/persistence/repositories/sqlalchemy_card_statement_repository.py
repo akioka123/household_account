@@ -83,7 +83,3 @@ class SqlAlchemyCardStatementRepository:
             amount=Money(model.amount),
         )
 
-
-# Protocol実装として登録
-CardStatementRepository.register(SqlAlchemyCardStatementRepository)
-

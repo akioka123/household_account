@@ -63,7 +63,7 @@ class GetMonthSummaryUseCase:
             月次サマリ結果
         """
         ym = YearMonth(year, month)
-        next_ym = YearMonth(year, month + 1) if month < 12 else YearMonth(year + 1, 1)
+        next_ym = ym.next_month()
 
         # 収入を取得
         income = await self._income_repo.find(ym)
@@ -126,7 +126,7 @@ class GetMonthSummaryUseCase:
             withdrawals_total = Money(sum(w.amount.amount for w in withdrawals))
             if next_cash_start:
                 cash_spent_amount = MonthCalculator.calculate_cash_spent_amount(
-                    cash_start, withdrawals_total, next_cash_start
+                    cash_start.amount, withdrawals_total, next_cash_start.amount
                 )
                 cash_spent = Money(max(0, cash_spent_amount))
             else:
@@ -140,9 +140,8 @@ class GetMonthSummaryUseCase:
             variable_card_total, cash_spent
         )
 
-        # 損益を計算
+        # 損益を計算（負の値も保持する）
         profit_amount = MonthCalculator.calculate_profit_amount(net_income, fixed_total, variable_total)
-        profit = Money(max(0, profit_amount))
 
         # 月次サマリを作成
         summary = MonthSummary.calculate(ym, net_income, fixed_total, variable_total, profit_amount)

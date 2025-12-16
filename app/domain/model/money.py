@@ -6,14 +6,17 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Money:
-    """金額（円）。不変条件：0以上。"""
+    """金額（円）。不変条件：0以上（ただし、profit等の計算結果として負の値も許容）。"""
 
     amount: int
 
     def __post_init__(self) -> None:
-        """不変条件の検証"""
-        if self.amount < 0:
-            raise ValueError("Money must be >= 0")
+        """不変条件の検証
+        
+        注意: profit等の計算結果として負の値（損失）を表現する必要があるため、
+        負の値も許可する。ただし、通常の金額（収入、支出等）は0以上であるべき。
+        """
+        pass
 
     def __add__(self, other: Money) -> Money:
         """加算"""

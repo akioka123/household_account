@@ -50,7 +50,23 @@ def test_year_month_next_month_year_rollover() -> None:
 def test_year_month_to_string() -> None:
     """YYYY-MM形式の文字列に変換"""
     ym = YearMonth(2024, 5)
-    assert str(ym) == "YearMonth(year=2024, month=5)"
+    assert ym.to_string() == "2024-05"
+
+
+def test_year_month_from_string() -> None:
+    """YYYY-MM形式の文字列からYearMonthを作成"""
+    ym = YearMonth.from_string("2024-05")
+    assert ym.year == 2024
+    assert ym.month == 5
+
+
+def test_year_month_from_string_invalid_format() -> None:
+    """無効な形式の文字列の場合、例外を発生"""
+    with pytest.raises(ValueError, match="Invalid YearMonth format"):
+        YearMonth.from_string("2024/05")
+    
+    with pytest.raises(ValueError, match="Invalid YearMonth format"):
+        YearMonth.from_string("2024")
 
 
 def test_year_month_comparison() -> None:

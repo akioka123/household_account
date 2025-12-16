@@ -82,7 +82,3 @@ class SqlAlchemyFixedItemHistoryRepository:
             included_in_card=model.included_in_card,
         )
 
-
-# Protocol実装として登録
-FixedItemHistoryRepository.register(SqlAlchemyFixedItemHistoryRepository)
-

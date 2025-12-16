@@ -13,9 +13,9 @@ def test_money_creation() -> None:
 
 
 def test_money_negative_amount() -> None:
-    """負の金額の場合、例外を発生"""
-    with pytest.raises(ValueError, match="Money must be >= 0"):
-        Money(-1)
+    """負の金額も許可（損益計算などで必要）"""
+    money = Money(-1000)
+    assert money.amount == -1000
 
 
 def test_money_addition() -> None:

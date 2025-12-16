@@ -65,7 +65,3 @@ class SqlAlchemyCardRepository:
         """SQLAlchemyモデルをドメインモデルに変換"""
         return Card(id=model.id, name=model.name, enabled=model.enabled)
 
-
-# Protocol実装として登録
-CardRepository.register(SqlAlchemyCardRepository)
-

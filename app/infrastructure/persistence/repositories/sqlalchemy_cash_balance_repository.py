@@ -70,7 +70,3 @@ class SqlAlchemyCashBalanceRepository:
             year_month=year_month,
             amount=Money(model.amount),
         )
-
-
-# Protocol実装として登録
-CashBalanceRepository.register(SqlAlchemyCashBalanceRepository)
