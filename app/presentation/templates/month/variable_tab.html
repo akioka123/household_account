@@ -1,10 +1,10 @@
-<div>
+<div id="variable-expenses-content">
     <h3 class="text-lg font-semibold mb-4">変動費（カード請求）</h3>
     
     <form 
         id="variable-expenses-form"
         hx-post="/month/{{ year }}/{{ month }}/card-statements"
-        hx-target="#variable-expenses-content"
+        hx-target="closest #variable-expenses-content"
         hx-swap="outerHTML"
         class="space-y-4"
     >

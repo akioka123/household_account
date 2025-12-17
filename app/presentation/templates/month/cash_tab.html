@@ -1,4 +1,4 @@
-<div>
+<div id="cash-content">
     <h3 class="text-lg font-semibold mb-4">現金</h3>
     
     <!-- 月初現金 -->
@@ -141,7 +141,7 @@
     </div>
     
     <!-- 現金支出計算結果 -->
-    <div id="cash-content" class="mt-6">
+    <div id="cash-result" class="mt-6">
         {% if cash_data.cash_start and cash_data.cash_start_next %}
         {% set withdrawals_total = cash_data.withdrawals|sum(attribute='amount.amount') %}
         {% set cash_spent = cash_data.cash_start.amount.amount + withdrawals_total - cash_data.cash_start_next.amount.amount %}
