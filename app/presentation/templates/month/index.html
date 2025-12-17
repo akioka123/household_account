@@ -6,14 +6,16 @@
 <div id="main-content">
     <div class="mb-6">
         <h2 class="text-2xl font-bold mb-4">{{ year }}年{{ "%02d"|format(month) }}月</h2>
-        
+
         <!-- 年月切替UI -->
         <div class="flex items-center space-x-4 mb-6">
-            <a href="/month/{{ prev_year }}/{{ prev_month }}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
+            <a href="/month/{{ prev_year }}/{{ prev_month }}"
+                class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
                 前の月
             </a>
             <span class="text-lg font-medium">{{ year }}年{{ "%02d"|format(month) }}月</span>
-            <a href="/month/{{ next_year }}/{{ next_month }}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
+            <a href="/month/{{ next_year }}/{{ next_month }}"
+                class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
                 次の月
             </a>
         </div>
@@ -23,54 +25,35 @@
     <div class="bg-white rounded-lg shadow">
         <div class="border-b border-gray-200">
             <nav class="-mb-px flex space-x-8 px-6">
-                <button 
-                    id="tab-summary" 
+                <button id="tab-summary"
                     class="tab-button border-b-2 border-blue-500 py-4 px-4 text-blue-600 font-medium"
-                    hx-get="/month/{{ year }}/{{ month }}/tab/summary"
-                    hx-target="#tab-content"
-                    hx-swap="innerHTML"
-                >
+                    hx-get="/month/{{ year }}/{{ month }}/tab/summary" hx-target="#tab-content" hx-swap="innerHTML">
                     集計
                 </button>
-                <button 
-                    id="tab-variable" 
+                <button id="tab-cash"
                     class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
-                    hx-get="/month/{{ year }}/{{ month }}/tab/variable"
-                    hx-target="#tab-content"
-                    hx-swap="innerHTML"
-                >
-                    変動費
-                </button>
-                <button 
-                    id="tab-cash" 
-                    class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
-                    hx-get="/month/{{ year }}/{{ month }}/tab/cash"
-                    hx-target="#tab-content"
-                    hx-swap="innerHTML"
-                >
+                    hx-get="/month/{{ year }}/{{ month }}/tab/cash" hx-target="#tab-content" hx-swap="innerHTML">
                     現金
                 </button>
-                <button 
-                    id="tab-fixed" 
+                <button id="tab-income"
                     class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
-                    hx-get="/month/{{ year }}/{{ month }}/tab/fixed"
-                    hx-target="#tab-content"
-                    hx-swap="innerHTML"
-                >
-                    固定費
-                </button>
-                <button 
-                    id="tab-income" 
-                    class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
-                    hx-get="/month/{{ year }}/{{ month }}/tab/income"
-                    hx-target="#tab-content"
-                    hx-swap="innerHTML"
-                >
+                    hx-get="/month/{{ year }}/{{ month }}/tab/income" hx-target="#tab-content" hx-swap="innerHTML">
                     収入
                 </button>
+                <button id="tab-variable"
+                    class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
+                    hx-get="/month/{{ year }}/{{ month }}/tab/variable" hx-target="#tab-content" hx-swap="innerHTML">
+                    変動費
+                </button>
+                <button id="tab-fixed"
+                    class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
+                    hx-get="/month/{{ year }}/{{ month }}/tab/fixed" hx-target="#tab-content" hx-swap="innerHTML">
+                    固定費
+                </button>
+
             </nav>
         </div>
-        
+
         <!-- タブコンテンツ -->
         <div id="tab-content" class="p-6">
             {% include "month/summary_tab.html" %}
@@ -79,31 +62,30 @@
 </div>
 
 <script>
-// タブ切り替え時のスタイル更新
-document.body.addEventListener('htmx:afterSwap', function(event) {
-    if (event.detail.target.id === 'tab-content') {
-        // すべてのタブボタンのスタイルをリセット
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('border-blue-500', 'text-blue-600', 'font-medium');
-            btn.classList.add('border-transparent', 'text-gray-500');
-        });
-        
-        // アクティブなタブのスタイルを適用
-        const path = event.detail.pathInfo.requestPath;
-        let activeTabId = 'tab-income'; // デフォルト
-        if (path.includes('/tab/summary')) activeTabId = 'tab-summary';
-        else if (path.includes('/tab/variable')) activeTabId = 'tab-variable';
-        else if (path.includes('/tab/cash')) activeTabId = 'tab-cash';
-        else if (path.includes('/tab/fixed')) activeTabId = 'tab-fixed';
-        else if (path.includes('/tab/income')) activeTabId = 'tab-income';
-        
-        const activeButton = document.getElementById(activeTabId);
-        if (activeButton) {
-            activeButton.classList.remove('border-transparent', 'text-gray-500');
-            activeButton.classList.add('border-blue-500', 'text-blue-600', 'font-medium');
+    // タブ切り替え時のスタイル更新
+    document.body.addEventListener('htmx:afterSwap', function (event) {
+        if (event.detail.target.id === 'tab-content') {
+            // すべてのタブボタンのスタイルをリセット
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-600', 'font-medium');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // アクティブなタブのスタイルを適用
+            const path = event.detail.pathInfo.requestPath;
+            let activeTabId = 'tab-income'; // デフォルト
+            if (path.includes('/tab/summary')) activeTabId = 'tab-summary';
+            else if (path.includes('/tab/variable')) activeTabId = 'tab-variable';
+            else if (path.includes('/tab/cash')) activeTabId = 'tab-cash';
+            else if (path.includes('/tab/fixed')) activeTabId = 'tab-fixed';
+            else if (path.includes('/tab/income')) activeTabId = 'tab-income';
+
+            const activeButton = document.getElementById(activeTabId);
+            if (activeButton) {
+                activeButton.classList.remove('border-transparent', 'text-gray-500');
+                activeButton.classList.add('border-blue-500', 'text-blue-600', 'font-medium');
+            }
         }
-    }
-});
+    });
 </script>
 {% endblock %}
-
