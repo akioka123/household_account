@@ -5,10 +5,17 @@ from typing import AsyncIterator
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.persistence.session import get_db_session
+from app.infrastructure.persistence.database import AsyncSessionLocal
 
 
 async def get_db() -> AsyncIterator[AsyncSession]:
     """データベースセッションを取得（FastAPI依存性注入用）"""
-    async for session in get_db_session():
-        yield session
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        else:
+            await session.commit()
+        # async withが自動的にセッションをクローズする

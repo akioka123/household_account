@@ -1,4 +1,5 @@
 """データベース接続設定"""
+
 from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -14,6 +15,10 @@ _engine = create_async_engine(
     get_database_url(),
     echo=False,  # SQLログ出力（開発時はTrueに設定可能）
     future=True,
+    pool_pre_ping=True,  # 接続の有効性を確認
+    pool_recycle=3600,  # 1時間で接続を再生成
+    pool_size=5,  # プールサイズ
+    max_overflow=10,  # 最大オーバーフロー
 )
 
 # セッションファクトリ

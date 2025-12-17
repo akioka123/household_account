@@ -1,9 +1,13 @@
 """データベース設定"""
+
 from __future__ import annotations
 
-import os
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from pydantic_settings import BaseSettings
+# プロジェクトルートを取得（このファイルから見て2階層上）
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+ENV_FILE = PROJECT_ROOT / ".env"
 
 
 class DatabaseSettings(BaseSettings):
@@ -15,9 +19,12 @@ class DatabaseSettings(BaseSettings):
     db_password: str = "secret"
     db_name: str = "household"
 
-    class Config:
-        env_prefix = "DB_"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+        env_file=str(ENV_FILE),
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+    )
 
 
 _settings = DatabaseSettings()
