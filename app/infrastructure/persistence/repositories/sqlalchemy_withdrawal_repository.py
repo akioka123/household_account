@@ -70,7 +70,7 @@ class SqlAlchemyWithdrawalRepository:
         model = result.scalar_one_or_none()
 
         if model:
-            await self._session.delete(model)
+            self._session.delete(model)
             await self._session.flush()
 
     def _to_domain(self, model: WithdrawalModel) -> Withdrawal:

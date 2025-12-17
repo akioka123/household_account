@@ -56,7 +56,7 @@ class SqlAlchemyCardStatementRepository:
             )
             self._session.add(model)
 
-        self._session.flush()
+        await self._session.flush()  # awaitを追加
 
     async def delete(self, statement_id: int) -> None:
         """カード請求を削除"""
@@ -66,7 +66,7 @@ class SqlAlchemyCardStatementRepository:
 
         if model:
             self._session.delete(model)
-            self._session.flush()
+            await self._session.flush()  # awaitを追加
 
     def _to_domain(self, model: CardStatementModel) -> CardStatement:
         """SQLAlchemyモデルをドメインモデルに変換"""

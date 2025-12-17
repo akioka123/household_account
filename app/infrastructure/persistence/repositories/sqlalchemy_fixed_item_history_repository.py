@@ -63,7 +63,7 @@ class SqlAlchemyFixedItemHistoryRepository:
             included_in_card=history.included_in_card,
         )
         self._session.add(model)
-        self._session.flush()
+        await self._session.flush()  # awaitを追加
 
     def _to_domain(self, model: FixedItemHistoryModel) -> FixedItemHistory:
         """SQLAlchemyモデルをドメインモデルに変換"""

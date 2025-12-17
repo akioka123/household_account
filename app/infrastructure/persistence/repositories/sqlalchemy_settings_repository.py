@@ -48,5 +48,5 @@ class SqlAlchemySettingsRepository:
             )
             self._session.add(model)
 
-        self._session.flush()
+        await self._session.flush()
 

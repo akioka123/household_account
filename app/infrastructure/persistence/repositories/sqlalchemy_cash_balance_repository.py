@@ -55,7 +55,7 @@ class SqlAlchemyCashBalanceRepository:
             )
             self._session.add(model)
 
-        self._session.flush()
+        await self._session.flush()
 
     def _to_domain(self, model: CashBalanceModel) -> CashBalance:
         """SQLAlchemyモデルをドメインモデルに変換"""

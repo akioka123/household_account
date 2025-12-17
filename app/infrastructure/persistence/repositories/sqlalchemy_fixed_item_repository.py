@@ -48,7 +48,7 @@ class SqlAlchemyFixedItemRepository:
             model = FixedItemModel(id=fixed_item.id, name=fixed_item.name)
             self._session.add(model)
 
-        self._session.flush()
+        await self._session.flush()
 
     def _to_domain(self, model: FixedItemModel) -> FixedItem:
         """SQLAlchemyモデルをドメインモデルに変換"""

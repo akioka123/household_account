@@ -40,7 +40,7 @@ class SqlAlchemyIncomeRepository:
             )
             self._session.add(model)
 
-        self._session.flush()
+        await self._session.flush()
 
     async def find(self, ym: YearMonth) -> Income | None:
         """指定年月の収入を取得"""
