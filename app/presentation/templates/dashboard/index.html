@@ -6,7 +6,7 @@
 <div id="main-content">
     <div class="mb-6">
         <h2 class="text-2xl font-bold mb-4">{{ year }}年 ダッシュボード</h2>
-        
+
         <!-- 年切替UI -->
         <div class="flex items-center space-x-4 mb-6">
             <a href="/dashboard/{{ year - 1 }}" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
@@ -59,47 +59,26 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                {% for month in range(1, 13) %}
-                {% set summary = none %}
-                {% for s in dashboard_data.month_summaries %}
-                    {% if s.year_month.month == month %}
-                        {% set summary = s %}
-                    {% endif %}
-                {% endfor %}
+                {% for summary in dashboard_data.month_summaries %}
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ year }}-{{ "%02d"|format(month) }}
+                        {{ year }}-{{ "%02d"|format(summary.year_month.month) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
-                        {% if summary %}
-                            {{ "{:,}".format(summary.net_income.amount) }}円
-                        {% else %}
-                            -
-                        {% endif %}
+                        {{ "{:,}".format(summary.net_income.amount) }}円
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
-                        {% if summary %}
-                            {{ "{:,}".format(summary.fixed_total.amount) }}円
-                        {% else %}
-                            -
-                        {% endif %}
+                        {{ "{:,}".format(summary.fixed_total.amount) }}円
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
-                        {% if summary %}
-                            {{ "{:,}".format(summary.variable_total.amount) }}円
-                        {% else %}
-                            -
-                        {% endif %}
+                        {{ "{:,}".format(summary.variable_total.amount) }}円
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right {% if summary and summary.profit.amount < 0 %}text-red-600{% else %}text-gray-900{% endif %}">
-                        {% if summary %}
-                            {{ "{:,}".format(summary.profit.amount) }}円
-                        {% else %}
-                            -
-                        {% endif %}
+                    <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-right {% if summary and summary.profit.amount < 0 %}text-red-600{% else %}text-gray-900{% endif %}">
+                        {{ "{:,}".format(summary.profit.amount) }}円
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <a href="/month/{{ year }}/{{ month }}"  class="text-blue-600 hover:text-blue-800">
+                        <a href="/month/{{ year }}/{{ summary.year_month.month }}" class="text-blue-600 hover:text-blue-800">
                             詳細
                         </a>
                     </td>
@@ -110,4 +89,3 @@
     </div>
 </div>
 {% endblock %}
-
