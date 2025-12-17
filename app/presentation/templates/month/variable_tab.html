@@ -4,7 +4,7 @@
     <form 
         id="variable-expenses-form"
         hx-post="/month/{{ year }}/{{ month }}/card-statements"
-        hx-target="closest #variable-expenses-content"
+        hx-target="#variable-expenses-content"
         hx-swap="outerHTML"
         class="space-y-4"
     >
@@ -106,7 +106,7 @@
         </div>
     </form>
     
-    <div id="variable-expenses-content" class="mt-6">
+    <div id="variable-expenses-result" class="mt-6">
         {% if statements %}
         <div class="bg-green-50 rounded-lg p-4">
             <p class="text-sm text-green-800">
