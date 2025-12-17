@@ -5,6 +5,7 @@ from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.infrastructure.middleware.access_log import AccessLogMiddleware
@@ -23,6 +24,9 @@ app.add_middleware(AccessLogMiddleware)
 
 # Jinja2テンプレートエンジン設定
 templates = Jinja2Templates(directory="app/presentation/templates")
+
+# 静的ファイル配信設定
+app.mount("/static", StaticFiles(directory="app/presentation/static"), name="static")
 
 # ルーターを登録
 app.include_router(dashboard_router)

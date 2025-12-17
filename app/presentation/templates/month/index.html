@@ -2,6 +2,10 @@
 
 {% block title %}{{ year }}年{{ month }}月 - 月次画面{% endblock %}
 
+{% block extra_head %}
+<script src="/static/js/variable-expenses.js" defer></script>
+{% endblock %}
+
 {% block content %}
 <div id="main-content">
     <div class="mb-6">

@@ -1,6 +1,17 @@
 <div id="variable-expenses-content">
     <h3 class="text-lg font-semibold mb-4">変動費（カード請求）</h3>
     
+    <!-- カードデータをJSONとして埋め込む（JavaScriptで使用） -->
+    <script type="application/json" id="cards-data">
+    [
+        {% for card in cards %}
+        {% if card.enabled %}
+        {"id": {{ card.id }}, "name": "{{ card.name|e }}"}{% if not loop.last %},{% endif %}
+        {% endif %}
+        {% endfor %}
+    ]
+    </script>
+    
     <form 
         id="variable-expenses-form"
         hx-post="/month/{{ year }}/{{ month }}/card-statements"
@@ -116,57 +127,4 @@
         {% endif %}
     </div>
 </div>
-
-<script>
-// 行追加機能
-document.addEventListener('DOMContentLoaded', function() {
-    const addRowBtn = document.getElementById('add-row-btn');
-    const rowsContainer = document.getElementById('variable-expenses-rows');
-    
-    if (addRowBtn && rowsContainer) {
-        addRowBtn.addEventListener('click', function() {
-            const rowCount = rowsContainer.querySelectorAll('.variable-expense-row').length;
-            const newRow = document.createElement('div');
-            newRow.className = 'variable-expense-row flex items-center space-x-3 p-3 bg-gray-50 rounded-lg';
-            newRow.innerHTML = `
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">カード</label>
-                    <select 
-                        name="card_id_${rowCount}" 
-                        required
-                        class="w-full border border-gray-300 rounded-md px-3 py-2"
-                    >
-                        <option value="">選択してください</option>
-                        {% for card in cards %}
-                        {% if card.enabled %}
-                        <option value="{{ card.id }}">{{ card.name }}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">請求総額</label>
-                    <input 
-                        type="number" 
-                        name="amount_${rowCount}" 
-                        min="0"
-                        required
-                        class="w-full border border-gray-300 rounded-md px-3 py-2"
-                    >
-                </div>
-                <div class="pt-6">
-                    <button 
-                        type="button" 
-                        class="remove-row-btn text-red-600 hover:text-red-800 px-3 py-2"
-                        onclick="this.closest('.variable-expense-row').remove()"
-                    >
-                        削除
-                    </button>
-                </div>
-            `;
-            rowsContainer.appendChild(newRow);
-        });
-    }
-});
-</script>
 
