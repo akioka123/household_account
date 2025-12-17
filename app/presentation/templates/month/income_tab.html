@@ -1,4 +1,4 @@
-<div>
+<div id="income-content">
     <h3 class="text-lg font-semibold mb-4">収入</h3>
     
     <form 
@@ -73,8 +73,8 @@
     </form>
     
     {% if income %}
-    <div id="income-content" class="mt-6 p-4 bg-green-50 rounded-lg">
-        <p class="text-sm text-green-800">
+    <div id="income-result" class="mt-6 p-4 bg-green-50 rounded-lg">
+        <p class="text-sm text-1green-800">
             <strong>手取り合計:</strong> {{ "{:,}".format(income.net_total().amount) }}円
         </p>
         <p class="text-sm text-green-800">
@@ -82,7 +82,7 @@
         </p>
     </div>
     {% else %}
-    <div id="income-content" class="mt-6 p-4 bg-gray-50 rounded-lg">
+    <div id="income-result" class="mt-6 p-4 bg-gray-50 rounded-lg">
         <p class="text-sm text-gray-600">収入データが登録されていません。</p>
     </div>
     {% endif %}
