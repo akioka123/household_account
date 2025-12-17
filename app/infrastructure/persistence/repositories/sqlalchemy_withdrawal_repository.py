@@ -61,7 +61,7 @@ class SqlAlchemyWithdrawalRepository:
             )
             self._session.add(model)
 
-        self._session.flush()
+        await self._session.flush()
 
     async def delete(self, withdrawal_id: int) -> None:
         """引出明細を削除"""
