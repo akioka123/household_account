@@ -58,7 +58,7 @@
             <div class="text-center">
                 <span class="text-sm text-gray-600">当月損益</span>
                 <p class="text-3xl font-bold {% if summary.profit.amount < 0 %}text-red-600{% else %}text-green-600{% endif %} mt-2">
-                    {% if summary.profit.amount < 0 %}-{% endif %}{{ "{:,}".format(abs(summary.profit.amount)) }}円
+                    {{ "{:,}".format(summary.profit.amount) }}円
                 </p>
                 <p class="text-xs text-gray-500 mt-2">
                     （手取り収入 - 固定費 - 変動費）

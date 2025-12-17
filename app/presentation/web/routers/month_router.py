@@ -222,6 +222,7 @@ async def month_page(
     year: int,
     month: int,
     income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)],
+    summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)],
 ) -> HTMLResponse:
     """月次画面表示"""
     from datetime import datetime
@@ -253,6 +254,8 @@ async def month_page(
     years_with_data = set()  # TODO: 後続フェーズで実装
     years = get_years_with_data(current_year, years_with_data)
 
+    result = await summary_uc.execute(year, month)
+
     return templates.TemplateResponse(
         "month/index.html",
         {
@@ -260,6 +263,10 @@ async def month_page(
             "year": year,
             "month": month,
             "year_month": ym,
+            "summary": result.summary,
+            "warnings": result.warnings,
+            "cash_spent_uncertain": result.cash_spent_uncertain,
+            "variable_card_negative": result.variable_card_negative,
             "prev_year": prev_ym.year,
             "prev_month": prev_ym.month,
             "next_year": next_ym.year,
