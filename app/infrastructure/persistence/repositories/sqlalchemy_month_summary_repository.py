@@ -11,6 +11,7 @@ from app.application.port.month_summary_repository import MonthSummaryRepository
 from app.application.port.withdrawal_repository import WithdrawalRepository
 from app.domain.model.money import Money
 from app.domain.model.month_summary import MonthSummary
+from app.domain.model.fixed_expenses import FixedExpenses
 from app.domain.service.month_calculator import MonthCalculator
 from app.domain.model.year_month import YearMonth
 from app.infrastructure.persistence.repositories.sqlalchemy_cash_balance_repository import (
@@ -70,20 +71,9 @@ class SqlAlchemyMonthSummaryRepository:
 
         # 固定費を取得
         fixed_histories = await self._fixed_item_history_repo.find_active_at(ym)
-        fixed_total = Money(0)
-        fixed_in_card_by_card: dict[int, Money] = {}  # カードIDごとの固定費合計
-
-        for history in fixed_histories:
-            if history.is_deleted():
-                continue
-            fixed_total = fixed_total + history.amount
-            if history.included_in_card and history.card_id:
-                card_id = history.card_id
-                if card_id not in fixed_in_card_by_card:
-                    fixed_in_card_by_card[card_id] = Money(0)
-                fixed_in_card_by_card[card_id] = (
-                    fixed_in_card_by_card[card_id] + history.amount
-                )
+        fixed_expenses = FixedExpenses.calculate(fixed_histories)
+        fixed_total = fixed_expenses.total
+        fixed_in_card_by_card = fixed_expenses.by_card
 
         # カード請求を取得
         card_statements = await self._card_statement_repo.find_by_year_month(ym)
