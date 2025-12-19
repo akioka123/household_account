@@ -74,9 +74,9 @@ class GetMonthSummaryUseCase:
 
         # 固定費を取得
         fixed_histories = await self._fixed_item_history_repo.find_active_at(ym)
-        fixed_expenses = FixedExpenses.calculate(fixed_histories)
-        fixed_total = fixed_expenses.total
-        fixed_in_card_by_card = fixed_expenses.by_card
+        fixed_expenses = FixedExpenses(fixed_histories)
+        fixed_total = fixed_expenses.calculate()
+        fixed_in_card_by_card = fixed_expenses.by_card()
 
         # カード請求を取得
         card_statements = await self._card_statement_repo.find_by_year_month(ym)

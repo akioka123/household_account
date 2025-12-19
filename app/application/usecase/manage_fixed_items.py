@@ -1,4 +1,5 @@
 """固定費管理ユースケース"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 from app.application.port.fixed_item_history_repository import FixedItemHistoryRepository
 from app.application.port.fixed_item_repository import FixedItemRepository
 from app.application.port.logger import Logger
+from app.domain.model.fixed_expenses import FixedExpenses
 from app.domain.model.fixed_item import FixedItem
 from app.domain.model.fixed_item_history import FixedItemHistory
 from app.domain.model.log_context import LogContext
@@ -152,9 +154,11 @@ class ManageFixedItemsUseCase:
         # 指定年月で有効な履歴を取得
         histories = await self._fixed_item_history_repo.find_active_at(ym)
 
-        # 各履歴について、固定費項目情報を取得
+        fixed_expenses = FixedExpenses(histories)
+        effective_histories = fixed_expenses.get_effective_histories()
+
         result: list[ActiveFixedItem] = []
-        for history in histories:
+        for history in effective_histories:
             # 削除済み（金額0）の場合はスキップ
             if history.is_deleted():
                 continue
@@ -165,9 +169,7 @@ class ManageFixedItemsUseCase:
 
             # 同じ固定費項目で複数の履歴がある場合、最新のものを採用
             # （effective_fromが最大のもの）
-            existing = next(
-                (r for r in result if r.fixed_item_id == history.fixed_item_id), None
-            )
+            existing = next((r for r in result if r.fixed_item_id == history.fixed_item_id), None)
             if existing is None or history.effective_from > existing.effective_from:
                 if existing:
                     result.remove(existing)
@@ -181,7 +183,6 @@ class ManageFixedItemsUseCase:
                         included_in_card=history.included_in_card,
                     )
                 )
-
         return result
 
     async def get_all_fixed_items(self) -> list[FixedItem]:
@@ -191,4 +192,3 @@ class ManageFixedItemsUseCase:
             全固定費項目のリスト
         """
         return await self._fixed_item_repo.find_all()
-
