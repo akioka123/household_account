@@ -81,3 +81,36 @@ class SqlAlchemyIncomeRepository:
 
         return incomes
 
+    async def find_by_years(self, start_year: int, end_year: int) -> dict[YearMonth, Income]:
+        """指定期間の全月の収入を取得"""
+        from sqlalchemy import and_
+
+        # 年範囲でクエリを作成
+        start_prefix = f"{start_year}-"
+        end_prefix = f"{end_year}-"
+        
+        # 年範囲の条件を作成（文字列比較で範囲を指定）
+        stmt = select(IncomeModel).where(
+            and_(
+                IncomeModel.year_month >= start_prefix,
+                IncomeModel.year_month < f"{end_year + 1}-"
+            )
+        ).order_by(IncomeModel.year_month)
+        
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+
+        incomes: dict[YearMonth, Income] = {}
+        for model in models:
+            ym = YearMonth.from_string(model.year_month)
+            # 範囲内の年のみを対象とする
+            if start_year <= ym.year <= end_year:
+                incomes[ym] = Income.of(
+                    salary_gross=model.salary_gross,
+                    salary_net=model.salary_net,
+                    bonus_gross=model.bonus_gross,
+                    bonus_net=model.bonus_net,
+                )
+
+        return incomes
+

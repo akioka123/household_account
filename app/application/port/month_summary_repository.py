@@ -1,4 +1,5 @@
 """月次サマリの永続化Port"""
+
 from __future__ import annotations
 
 from typing import Protocol
@@ -18,3 +19,6 @@ class MonthSummaryRepository(Protocol):
         """指定年月のサマリを取得"""
         ...
 
+    async def find_by_years(self, start_year: int, end_year: int) -> list[MonthSummary]:
+        """指定期間の全月のサマリを取得"""
+        ...

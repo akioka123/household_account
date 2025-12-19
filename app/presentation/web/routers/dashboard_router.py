@@ -11,6 +11,7 @@ from app.application.port.income_repository import IncomeRepository
 from app.application.port.logger import Logger
 from app.application.port.month_summary_repository import MonthSummaryRepository
 from app.application.usecase.get_dashboard_data import GetDashboardDataUseCase
+from app.application.usecase.get_overall_dashboard_data import GetOverallDashboardDataUseCase
 from app.infrastructure.logging.structured_logger import StructuredLogger
 from app.infrastructure.persistence.repositories.sqlalchemy_income_repository import (
     SqlAlchemyIncomeRepository,
@@ -54,6 +55,54 @@ def provide_get_dashboard_data_uc(
         month_summary_repo=month_summary_repo,
         income_repo=income_repo,
         logger=logger,
+    )
+
+
+def provide_get_overall_dashboard_data_uc(
+    month_summary_repo: Annotated[MonthSummaryRepository, Depends(provide_month_summary_repo)],
+    income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)],
+    logger: Annotated[Logger, Depends(provide_logger)],
+) -> GetOverallDashboardDataUseCase:
+    """GetOverallDashboardDataUseCaseのDI"""
+    return GetOverallDashboardDataUseCase(
+        month_summary_repo=month_summary_repo,
+        income_repo=income_repo,
+        logger=logger,
+    )
+
+
+@router.get("/dashboard/overall", response_class=HTMLResponse)
+async def overall_dashboard(
+    request: Request,
+    usecase: Annotated[GetOverallDashboardDataUseCase, Depends(provide_get_overall_dashboard_data_uc)],
+) -> HTMLResponse:
+    """総合ダッシュボード表示"""
+    from datetime import datetime
+
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    # 年選択用のデータを準備（年次ダッシュボード用）
+    current_year = datetime.now().year
+    start_year = current_year - 5  # 当年の5年前から
+    
+    # 総合ダッシュボードデータを取得（当年の5年前から当年まで）
+    overall_dashboard_data = await usecase.execute(start_year=start_year, end_year=current_year)
+    
+    years_with_data = set()  # TODO: 後続フェーズで実装
+    years = get_years_with_data(current_year, years_with_data)
+
+    return templates.TemplateResponse(
+        "dashboard/overall.html",
+        {
+            "request": request,
+            "current_year": current_year,
+            "start_year": start_year,
+            "end_year": current_year,
+            "years": years,
+            "overall_dashboard_data": overall_dashboard_data,
+        },
     )
 
 

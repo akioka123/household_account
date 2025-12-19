@@ -22,3 +22,7 @@ class IncomeRepository(Protocol):
         """指定年の全月の収入を取得"""
         ...
 
+    async def find_by_years(self, start_year: int, end_year: int) -> dict[YearMonth, Income]:
+        """指定期間の全月の収入を取得"""
+        ...
+

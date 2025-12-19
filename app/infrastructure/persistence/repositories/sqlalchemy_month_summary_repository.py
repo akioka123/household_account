@@ -57,6 +57,17 @@ class SqlAlchemyMonthSummaryRepository:
                 summaries.append(summary)
         return summaries
 
+    async def find_by_years(self, start_year: int, end_year: int) -> list[MonthSummary]:
+        """指定期間の全月のサマリを取得"""
+        summaries: list[MonthSummary] = []
+        for year in range(start_year, end_year + 1):
+            for month in range(1, 13):
+                ym = YearMonth(year, month)
+                summary = await self._calculate_summary(ym)
+                if summary:
+                    summaries.append(summary)
+        return summaries
+
     async def find(self, ym: YearMonth) -> MonthSummary | None:
         """指定年月のサマリを取得"""
         return await self._calculate_summary(ym)

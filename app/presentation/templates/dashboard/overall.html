@@ -1,0 +1,76 @@
+{% extends "components/base.html" %}
+
+{% block title %}総合ダッシュボード{% endblock %}
+
+{% block content %}
+<div id="main-content">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold mb-4">総合ダッシュボード</h2>
+    </div>
+
+    <!-- グラフ領域 -->
+    <div class="grid grid-cols-1 gap-6 mb-8">
+        <!-- 年収推移グラフ -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">年収推移グラフ</h3>
+            <div style="position: relative; height: 400px;">
+                <canvas id="annual-income-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- 選択項目推移グラフ -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">選択項目推移グラフ</h3>
+            <div class="mb-4">
+                <label for="chart-type-select" class="block text-sm font-medium text-gray-700 mb-2">
+                    表示項目:
+                </label>
+                <select 
+                    id="chart-type-select" 
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                >
+                    <option value="profit">損益</option>
+                    <option value="netIncome">手取り</option>
+                    <option value="variableExpense">変動費</option>
+                </select>
+            </div>
+            <div style="position: relative; height: 400px;">
+                <canvas id="selected-item-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- グラフデータ（JSON形式で埋め込み） -->
+    <script id="overall-dashboard-chart-data" type="application/json">
+    {
+        "startYear": {{ start_year }},
+        "endYear": {{ end_year }},
+        "annualIncomes": [
+            {% for annual_income in overall_dashboard_data.annual_incomes %}
+            {
+                "year": {{ annual_income.year }},
+                "gross": {{ annual_income.gross }},
+                "net": {{ annual_income.net }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        "monthSummaries": [
+            {% for summary in overall_dashboard_data.month_summaries %}
+            {
+                "year": {{ summary.year_month.year }},
+                "month": {{ summary.year_month.month }},
+                "netIncome": {{ summary.net_income.amount }},
+                "variableTotal": {{ summary.variable_total.amount }},
+                "profit": {{ summary.profit.amount }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }
+    </script>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/overall-dashboard-chart.js"></script>
+{% endblock %}
