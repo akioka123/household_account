@@ -73,8 +73,8 @@
 
         getYAxisConfig() {
             return {
-                min: 200000,
-                max: 1000000,
+                min: 100000,
+                max: 800000,
                 ticks: {
                     stepSize: 50000,
                     callback: function (value) {

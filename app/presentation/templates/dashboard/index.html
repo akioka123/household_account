@@ -83,6 +83,33 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
+                <!-- 集計行 -->
+                {% set ns = namespace(total_net_income=0, total_fixed=0, total_variable=0, total_profit=0) %}
+                {% for summary in dashboard_data.month_summaries %}
+                    {% set ns.total_net_income = ns.total_net_income + summary.net_income.amount %}
+                    {% set ns.total_fixed = ns.total_fixed + summary.fixed_total.amount %}
+                    {% set ns.total_variable = ns.total_variable + summary.variable_total.amount %}
+                    {% set ns.total_profit = ns.total_profit + summary.profit.amount %}
+                {% endfor %}
+                <tr class="bg-gray-100 font-semibold">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        集計
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                        {{ "{:,}".format(ns.total_net_income) }}円
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                        {{ "{:,}".format(ns.total_fixed) }}円
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                        {{ "{:,}".format(ns.total_variable) }}円
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right {% if ns.total_profit < 0 %}text-red-600{% else %}text-gray-900{% endif %}">
+                        {{ "{:,}".format(ns.total_profit) }}円
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                    </td>
+                </tr>
                 {% for summary in dashboard_data.month_summaries %}
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
