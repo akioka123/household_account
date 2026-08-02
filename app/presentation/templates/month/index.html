@@ -54,6 +54,11 @@
                     hx-get="/month/{{ year }}/{{ month }}/tab/fixed" hx-target="#tab-content" hx-swap="innerHTML">
                     固定費
                 </button>
+                <button id="tab-living"
+                    class="tab-button border-b-2 border-transparent py-4 px-4 text-gray-500 hover:text-gray-700"
+                    hx-get="/month/{{ year }}/{{ month }}/tab/living" hx-target="#tab-content" hx-swap="innerHTML">
+                    生活費
+                </button>
 
             </nav>
         </div>
@@ -82,6 +87,7 @@
             else if (path.includes('/tab/variable')) activeTabId = 'tab-variable';
             else if (path.includes('/tab/cash')) activeTabId = 'tab-cash';
             else if (path.includes('/tab/fixed')) activeTabId = 'tab-fixed';
+            else if (path.includes('/tab/living')) activeTabId = 'tab-living';
             else if (path.includes('/tab/income')) activeTabId = 'tab-income';
 
             const activeButton = document.getElementById(activeTabId);

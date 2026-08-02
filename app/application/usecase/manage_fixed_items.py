@@ -42,6 +42,18 @@ class AddFixedItemHistoryCommand:
 
 
 @dataclass(frozen=True)
+class EndFixedItemOperationCommand:
+    """固定費の運用終了コマンド"""
+
+    fixed_item_id: int
+    """固定費項目ID"""
+    year: int
+    """運用終了を適用する年"""
+    month: int
+    """運用終了を適用する月"""
+
+
+@dataclass(frozen=True)
 class ActiveFixedItem:
     """有効な固定費（表示用）"""
 
@@ -139,6 +151,33 @@ class ManageFixedItemsUseCase:
             context,
         )
 
+    async def end_fixed_item_operation(self, command: EndFixedItemOperationCommand) -> None:
+        """指定年月以降の固定費運用を終了"""
+        await self.add_fixed_item_history(
+            AddFixedItemHistoryCommand(
+                fixed_item_id=command.fixed_item_id,
+                year=command.year,
+                month=command.month,
+                amount=0,
+                card_id=None,
+                included_in_card=False,
+            )
+        )
+
+        context = LogContext(
+            screen="month",
+            context={
+                "fixed_item_id": command.fixed_item_id,
+                "year": command.year,
+                "month": command.month,
+                "action": "end_fixed_item_operation",
+            },
+        )
+        self._logger.info(
+            f"固定費運用終了: ID {command.fixed_item_id} ({command.year}年{command.month}月)",
+            context,
+        )
+
     async def get_active_fixed_items_at(self, year: int, month: int) -> list[ActiveFixedItem]:
         """指定年月で有効な固定費を取得
 
@@ -192,3 +231,14 @@ class ManageFixedItemsUseCase:
             全固定費項目のリスト
         """
         return await self._fixed_item_repo.find_all()
+
+    async def get_histories_by_fixed_item(
+        self, fixed_items: list[FixedItem]
+    ) -> dict[int, list[FixedItemHistory]]:
+        """固定費項目ごとの履歴一覧を取得"""
+        histories_by_item: dict[int, list[FixedItemHistory]] = {}
+        for item in fixed_items:
+            histories_by_item[item.id] = await self._fixed_item_history_repo.find_by_fixed_item_id(
+                item.id
+            )
+        return histories_by_item

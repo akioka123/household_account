@@ -11,6 +11,7 @@ from app.application.port.logger import Logger
 from app.application.usecase.manage_fixed_items import (
     AddFixedItemCommand,
     AddFixedItemHistoryCommand,
+    EndFixedItemOperationCommand,
     ManageFixedItemsUseCase,
 )
 from app.domain.model.fixed_item import FixedItem
@@ -209,4 +210,74 @@ async def test_get_active_fixed_items_at(
     assert result[0].amount.amount == 100000
     assert result[1].fixed_item_id == 2
     assert result[1].amount.amount == 50000
+
+
+@pytest.mark.asyncio
+async def test_get_histories_by_fixed_item(
+    fake_fixed_item_repo: FixedItemRepository,
+    fake_fixed_item_history_repo: FixedItemHistoryRepository,
+    fake_logger: Logger,
+) -> None:
+    """固定費項目ごとの履歴一覧を取得"""
+    item1 = FixedItem(id=1, name="家賃")
+    item2 = FixedItem(id=2, name="保険")
+    history1 = FixedItemHistory(
+        id=1,
+        fixed_item_id=1,
+        effective_from=YearMonth(2024, 1),
+        amount=Money(100000),
+        card_id=None,
+        included_in_card=False,
+    )
+    history2 = FixedItemHistory(
+        id=2,
+        fixed_item_id=2,
+        effective_from=YearMonth(2024, 2),
+        amount=Money(5000),
+        card_id=1,
+        included_in_card=True,
+    )
+    fake_fixed_item_history_repo.find_by_fixed_item_id = AsyncMock(
+        side_effect=[[history1], [history2]]
+    )
+    usecase = ManageFixedItemsUseCase(
+        fixed_item_repo=fake_fixed_item_repo,
+        fixed_item_history_repo=fake_fixed_item_history_repo,
+        logger=fake_logger,
+    )
+
+    result = await usecase.get_histories_by_fixed_item([item1, item2])
+
+    assert result == {1: [history1], 2: [history2]}
+    assert fake_fixed_item_history_repo.find_by_fixed_item_id.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_end_fixed_item_operation_adds_zero_amount_history(
+    fake_fixed_item_repo: FixedItemRepository,
+    fake_fixed_item_history_repo: FixedItemHistoryRepository,
+    fake_logger: Logger,
+) -> None:
+    """固定費の運用終了履歴を追加"""
+    fixed_item = FixedItem(id=1, name="家賃")
+    fake_fixed_item_repo.find_by_id = AsyncMock(return_value=fixed_item)
+    fake_fixed_item_history_repo.find_all = AsyncMock(return_value=[])
+    usecase = ManageFixedItemsUseCase(
+        fixed_item_repo=fake_fixed_item_repo,
+        fixed_item_history_repo=fake_fixed_item_history_repo,
+        logger=fake_logger,
+    )
+
+    await usecase.end_fixed_item_operation(
+        EndFixedItemOperationCommand(fixed_item_id=1, year=2026, month=6)
+    )
+
+    fake_fixed_item_history_repo.save.assert_called_once()
+    saved = fake_fixed_item_history_repo.save.call_args.args[0]
+    assert saved.fixed_item_id == 1
+    assert saved.effective_from == YearMonth(2026, 6)
+    assert saved.amount.amount == 0
+    assert saved.card_id is None
+    assert saved.included_in_card is False
+    assert saved.is_deleted()
 

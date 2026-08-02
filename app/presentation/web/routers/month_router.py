@@ -14,6 +14,7 @@ from app.application.port.fixed_item_history_repository import FixedItemHistoryR
 from app.application.port.fixed_item_repository import FixedItemRepository
 from app.application.port.income_repository import IncomeRepository
 from app.application.port.logger import Logger
+from app.application.port.living_expense_repository import LivingExpenseRepository
 from app.application.port.withdrawal_repository import WithdrawalRepository
 from app.application.usecase.get_month_summary import GetMonthSummaryUseCase
 from app.application.usecase.manage_cash import (
@@ -22,10 +23,17 @@ from app.application.usecase.manage_cash import (
     ManageCashUseCase,
     UpdateCashBalanceCommand,
 )
+from app.application.usecase.manage_living_expenses import (
+    AddLivingExpenseCommand,
+    DeleteLivingExpenseCommand,
+    ManageLivingExpensesUseCase,
+    UpdateLivingExpenseCommand,
+)
 from app.application.usecase.manage_cards import ManageCardsUseCase
 from app.application.usecase.manage_fixed_items import (
     AddFixedItemCommand,
     AddFixedItemHistoryCommand,
+    EndFixedItemOperationCommand,
     ManageFixedItemsUseCase,
 )
 from app.application.usecase.register_card_statements import (
@@ -36,6 +44,7 @@ from app.application.usecase.register_income import (
     RegisterIncomeCommand,
     RegisterIncomeUseCase,
 )
+from app.domain.model.living_expense import LIVING_EXPENSE_CATEGORIES
 from app.domain.model.year_month import YearMonth
 from app.infrastructure.logging.structured_logger import StructuredLogger
 from app.infrastructure.persistence.repositories.sqlalchemy_cash_balance_repository import (
@@ -55,6 +64,9 @@ from app.infrastructure.persistence.repositories.sqlalchemy_fixed_item_repositor
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_income_repository import (
     SqlAlchemyIncomeRepository,
+)
+from app.infrastructure.persistence.repositories.sqlalchemy_living_expense_repository import (
+    SqlAlchemyLivingExpenseRepository,
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_withdrawal_repository import (
     SqlAlchemyWithdrawalRepository,
@@ -161,6 +173,34 @@ def provide_manage_cash_uc(
     return ManageCashUseCase(
         cash_balance_repo=cash_balance_repo,
         withdrawal_repo=withdrawal_repo,
+        logger=logger,
+    )
+
+
+# 生活費カテゴリの表示ラベル
+LIVING_CATEGORY_LABELS = {
+    "food": "食費",
+    "electricity": "電気代",
+    "gas": "ガス代",
+    "mobile": "携帯料金",
+    "communication": "通信費",
+}
+
+
+def provide_living_expense_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> LivingExpenseRepository:
+    """LivingExpenseRepositoryのDI"""
+    return SqlAlchemyLivingExpenseRepository(session)
+
+
+def provide_manage_living_expenses_uc(
+    living_expense_repo: Annotated[LivingExpenseRepository, Depends(provide_living_expense_repo)],
+    logger: Annotated[Logger, Depends(provide_logger)],
+) -> ManageLivingExpensesUseCase:
+    """ManageLivingExpensesUseCaseのDI"""
+    return ManageLivingExpensesUseCase(
+        living_expense_repo=living_expense_repo,
         logger=logger,
     )
 
@@ -664,6 +704,10 @@ async def fixed_tab(
     from fastapi.templating import Jinja2Templates
 
     templates = Jinja2Templates(directory="app/presentation/templates")
+    active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
+    all_fixed_items = await fixed_items_uc.get_all_fixed_items()
+    histories_by_item = await fixed_items_uc.get_histories_by_fixed_item(all_fixed_items)
+    cards = await cards_uc.get_all_cards()
 
     # 有効な固定費を取得
     active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
@@ -682,6 +726,7 @@ async def fixed_tab(
             "month": month,
             "active_items": active_items,
             "all_fixed_items": all_fixed_items,
+            "histories_by_item": histories_by_item,
             "cards": cards,
         },
     )
@@ -706,7 +751,9 @@ async def add_fixed_item(
 
     # 固定費タブを再取得
     active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
+    active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
     all_fixed_items = await fixed_items_uc.get_all_fixed_items()
+    histories_by_item = await fixed_items_uc.get_histories_by_fixed_item(all_fixed_items)
     cards = await cards_uc.get_all_cards()
 
     return templates.TemplateResponse(
@@ -717,6 +764,7 @@ async def add_fixed_item(
             "month": month,
             "active_items": active_items,
             "all_fixed_items": all_fixed_items,
+            "histories_by_item": histories_by_item,
             "cards": cards,
         },
     )
@@ -743,6 +791,7 @@ async def add_fixed_item_history(
 
     # card_idをintに変換（空文字列の場合はNone）
     card_id_int: int | None = None
+    card_id_int: int | None = None
     if card_id and card_id.strip():
         try:
             card_id_int = int(card_id)
@@ -764,7 +813,9 @@ async def add_fixed_item_history(
 
     # 固定費タブを再取得
     active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
+    active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
     all_fixed_items = await fixed_items_uc.get_all_fixed_items()
+    histories_by_item = await fixed_items_uc.get_histories_by_fixed_item(all_fixed_items)
     cards = await cards_uc.get_all_cards()
 
     return templates.TemplateResponse(
@@ -775,7 +826,195 @@ async def add_fixed_item_history(
             "month": month,
             "active_items": active_items,
             "all_fixed_items": all_fixed_items,
+            "histories_by_item": histories_by_item,
             "cards": cards,
         },
     )
 
+
+@router.post(
+    "/month/{year}/{month}/fixed-items/{fixed_item_id}/end",
+    response_class=HTMLResponse,
+)
+async def end_fixed_item_operation(
+    request: Request,
+    year: int,
+    month: int,
+    fixed_item_id: int,
+    fixed_items_uc: Annotated[ManageFixedItemsUseCase, Depends(provide_manage_fixed_items_uc)],
+    cards_uc: Annotated[ManageCardsUseCase, Depends(provide_manage_cards_uc)],
+    effective_year: int = Form(...),
+    effective_month: int = Form(...),
+) -> HTMLResponse:
+    """固定費の運用を終了"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    command = EndFixedItemOperationCommand(
+        fixed_item_id=fixed_item_id,
+        year=effective_year,
+        month=effective_month,
+    )
+    await fixed_items_uc.end_fixed_item_operation(command)
+
+    active_items = await fixed_items_uc.get_active_fixed_items_at(year, month)
+    all_fixed_items = await fixed_items_uc.get_all_fixed_items()
+    histories_by_item = await fixed_items_uc.get_histories_by_fixed_item(all_fixed_items)
+    cards = await cards_uc.get_all_cards()
+
+    return templates.TemplateResponse(
+        "month/fixed_tab.html",
+        {
+            "request": request,
+            "year": year,
+            "month": month,
+            "active_items": active_items,
+            "all_fixed_items": all_fixed_items,
+            "histories_by_item": histories_by_item,
+            "cards": cards,
+        },
+    )
+
+
+def _living_tab_context(
+    request: Request,
+    year: int,
+    month: int,
+    living_data,
+    error_message: str | None = None,
+) -> dict:
+    """生活費タブ用テンプレートコンテキスト"""
+    return {
+        "request": request,
+        "year": year,
+        "month": month,
+        "living_data": living_data,
+        "category_order": LIVING_EXPENSE_CATEGORIES,
+        "category_labels": LIVING_CATEGORY_LABELS,
+        "error_message": error_message,
+    }
+
+
+@router.get("/month/{year}/{month}/tab/living", response_class=HTMLResponse)
+async def living_tab(
+    request: Request,
+    year: int,
+    month: int,
+    living_expenses_uc: Annotated[ManageLivingExpensesUseCase, Depends(provide_manage_living_expenses_uc)],
+) -> HTMLResponse:
+    """生活費タブコンテンツ"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+    living_data = await living_expenses_uc.get_living_expense_data(year, month)
+
+    return templates.TemplateResponse(
+        "month/living_tab.html",
+        _living_tab_context(request, year, month, living_data),
+    )
+
+
+@router.post("/month/{year}/{month}/living-expenses", response_class=HTMLResponse)
+async def save_living_expense(
+    request: Request,
+    year: int,
+    month: int,
+    living_expenses_uc: Annotated[ManageLivingExpensesUseCase, Depends(provide_manage_living_expenses_uc)],
+    category: str = Form(...),
+    location: str = Form(default=""),
+    amount: int = Form(...),
+    note: str = Form(default=""),
+) -> HTMLResponse:
+    """生活費を保存"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    try:
+        command = AddLivingExpenseCommand(
+            year=year,
+            month=month,
+            category=category,
+            location=location,
+            amount=amount,
+            note=note,
+        )
+        await living_expenses_uc.add_living_expense(command)
+    except ValueError as e:
+        living_data = await living_expenses_uc.get_living_expense_data(year, month)
+        return templates.TemplateResponse(
+            "month/living_tab.html",
+            _living_tab_context(request, year, month, living_data, error_message=str(e)),
+        )
+
+    living_data = await living_expenses_uc.get_living_expense_data(year, month)
+    return templates.TemplateResponse(
+        "month/living_tab.html",
+        _living_tab_context(request, year, month, living_data),
+    )
+
+
+@router.post("/month/{year}/{month}/living-expenses/{living_expense_id}", response_class=HTMLResponse)
+async def update_living_expense(
+    request: Request,
+    year: int,
+    month: int,
+    living_expense_id: int,
+    living_expenses_uc: Annotated[ManageLivingExpensesUseCase, Depends(provide_manage_living_expenses_uc)],
+    category: str = Form(...),
+    location: str = Form(default=""),
+    amount: int = Form(...),
+    note: str = Form(default=""),
+) -> HTMLResponse:
+    """生活費を更新"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    try:
+        command = UpdateLivingExpenseCommand(
+            living_expense_id=living_expense_id,
+            year=year,
+            month=month,
+            category=category,
+            location=location,
+            amount=amount,
+            note=note,
+        )
+        await living_expenses_uc.update_living_expense(command)
+    except ValueError as e:
+        living_data = await living_expenses_uc.get_living_expense_data(year, month)
+        return templates.TemplateResponse(
+            "month/living_tab.html",
+            _living_tab_context(request, year, month, living_data, error_message=str(e)),
+        )
+
+    living_data = await living_expenses_uc.get_living_expense_data(year, month)
+    return templates.TemplateResponse(
+        "month/living_tab.html",
+        _living_tab_context(request, year, month, living_data),
+    )
+
+
+@router.post("/month/{year}/{month}/living-expenses/{living_expense_id}/delete", response_class=HTMLResponse)
+async def delete_living_expense(
+    request: Request,
+    year: int,
+    month: int,
+    living_expense_id: int,
+    living_expenses_uc: Annotated[ManageLivingExpensesUseCase, Depends(provide_manage_living_expenses_uc)],
+) -> HTMLResponse:
+    """生活費を削除"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    command = DeleteLivingExpenseCommand(living_expense_id=living_expense_id)
+    await living_expenses_uc.delete_living_expense(command)
+
+    living_data = await living_expenses_uc.get_living_expense_data(year, month)
+    return templates.TemplateResponse(
+        "month/living_tab.html",
+        _living_tab_context(request, year, month, living_data),
+    )

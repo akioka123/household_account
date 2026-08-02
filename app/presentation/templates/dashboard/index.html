@@ -74,6 +74,11 @@
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         変動費
                     </th>
+                    {% for cat_key in living_category_order %}
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ living_category_labels[cat_key] }}
+                    </th>
+                    {% endfor %}
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         損益
                     </th>
@@ -104,6 +109,15 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
                         {{ "{:,}".format(ns.total_variable) }}円
                     </td>
+                    {% for cat_key in living_category_order %}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                        {% set ns.cat_sum = 0 %}
+                        {% for s in dashboard_data.month_summaries %}
+                            {% set ns.cat_sum = ns.cat_sum + dashboard_data.living_expenses_by_month[s.year_month][cat_key].amount %}
+                        {% endfor %}
+                        {{ "{:,}".format(ns.cat_sum) }}円
+                    </td>
+                    {% endfor %}
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right {% if ns.total_profit < 0 %}text-red-600{% else %}text-gray-900{% endif %}">
                         {{ "{:,}".format(ns.total_profit) }}円
                     </td>
@@ -124,6 +138,12 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
                         {{ "{:,}".format(summary.variable_total.amount) }}円
                     </td>
+                    {% set ym = summary.year_month %}
+                    {% for cat_key in living_category_order %}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
+                        {{ "{:,}".format(dashboard_data.living_expenses_by_month[ym][cat_key].amount) }}円
+                    </td>
+                    {% endfor %}
                     <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-right {% if summary and summary.profit.amount < 0 %}text-red-600{% else %}text-gray-900{% endif %}">
                         {{ "{:,}".format(summary.profit.amount) }}円

@@ -1,0 +1,250 @@
+<div id="living-content">
+    <h3 class="text-lg font-semibold mb-4">生活費</h3>
+
+    {% if error_message %}
+    <div class="mb-4 p-3 bg-red-50 text-red-800 rounded-lg text-sm">{{ error_message }}</div>
+    {% endif %}
+
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h4 class="font-medium mb-3 text-gray-700">生活費を追加</h4>
+        <form
+            id="living-expense-form"
+            hx-post="/month/{{ year }}/{{ month }}/living-expenses"
+            hx-target="#living-content"
+            hx-swap="outerHTML"
+            class="space-y-3"
+        >
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">項目</label>
+                    <select
+                        name="category"
+                        id="living-category"
+                        required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                        {% for cat_key in category_order %}
+                        <option value="{{ cat_key }}">{{ category_labels[cat_key] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        場所 <span id="location-required-label">（必須）</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="location"
+                        id="living-location"
+                        maxlength="20"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+                    <input
+                        type="number"
+                        name="amount"
+                        min="0"
+                        max="99999"
+                        required
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">メモ</label>
+                    <input
+                        type="text"
+                        name="note"
+                        maxlength="50"
+                        placeholder="（任意）"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2"
+                    >
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        追加
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% for cat_key in category_order %}
+    {% set items = living_data.by_category.get(cat_key, []) %}
+    {% set total = living_data.totals_by_category.get(cat_key).amount %}
+    <div class="mb-6">
+        <h4 class="font-medium text-gray-800 mb-2">{{ category_labels[cat_key] }}</h4>
+        <div class="mb-2 p-3 bg-green-50 rounded-lg">
+            <p class="text-sm text-green-800"><strong>合計:</strong> {{ "{:,}".format(total) }}円</p>
+        </div>
+        {% if items %}
+        <div class="space-y-2">
+            {% for expense in items %}
+            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <span class="text-sm text-gray-600">場所:</span>
+                        <span class="ml-2 font-medium">{{ expense.location if expense.location else "-" }}</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">金額:</span>
+                        <span class="ml-2 font-semibold">{{ "{:,}".format(expense.amount.amount) }}円</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">メモ:</span>
+                        <span class="ml-2">{{ expense.note or "-" }}</span>
+                    </div>
+                </div>
+                <div class="ml-4 flex space-x-2">
+                    <button
+                        type="button"
+                        data-id="{{ expense.id }}"
+                        data-category="{{ expense.category }}"
+                        data-location="{{ expense.location or '' }}"
+                        data-amount="{{ expense.amount.amount }}"
+                        data-note="{{ expense.note or '' }}"
+                        onclick="editLivingExpenseFromButton(this)"
+                        class="text-blue-600 hover:text-blue-800 px-3 py-2"
+                    >
+                        編集
+                    </button>
+                    <form
+                        hx-post="/month/{{ year }}/{{ month }}/living-expenses/{{ expense.id }}/delete"
+                        hx-target="#living-content"
+                        hx-swap="outerHTML"
+                        class="inline"
+                    >
+                        <button type="submit" class="text-red-600 hover:text-red-800 px-3 py-2">削除</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-sm text-gray-600">{{ category_labels[cat_key] }}は登録されていません。</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div id="edit-living-expense-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium mb-4">生活費を編集</h3>
+                <form
+                    id="edit-living-expense-form"
+                    hx-post=""
+                    hx-target="#living-content"
+                    hx-swap="outerHTML"
+                    class="space-y-3"
+                >
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">項目</label>
+                        <select id="edit-category-select" class="w-full border border-gray-300 rounded-md px-3 py-2" name="category">
+                            {% for cat_key in category_order %}
+                            <option value="{{ cat_key }}">{{ category_labels[cat_key] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            場所 <span id="edit-location-required-label">（必須）</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="edit-location"
+                            name="location"
+                            maxlength="20"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
+                        <input
+                            type="number"
+                            id="edit-amount"
+                            name="amount"
+                            min="0"
+                            max="99999"
+                            required
+                            class="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">メモ</label>
+                        <input
+                            type="text"
+                            id="edit-note"
+                            name="note"
+                            maxlength="50"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button type="button" onclick="closeEditLivingModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">キャンセル</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var FOOD = 'food';
+
+    function updateRequired(selectEl, inputEl, labelEl) {
+        var isFood = selectEl && selectEl.value === FOOD;
+        if (inputEl) inputEl.required = isFood;
+        if (labelEl) labelEl.textContent = isFood ? '（必須）' : '（任意）';
+    }
+
+    var categorySelect = document.getElementById('living-category');
+    var locationInput = document.getElementById('living-location');
+    var requiredLabel = document.getElementById('location-required-label');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            updateRequired(categorySelect, locationInput, requiredLabel);
+        });
+    }
+    updateRequired(categorySelect, locationInput, requiredLabel);
+
+    var editCategorySelect = document.getElementById('edit-category-select');
+    var editLocationInput = document.getElementById('edit-location');
+    var editRequiredLabel = document.getElementById('edit-location-required-label');
+    if (editCategorySelect) {
+        editCategorySelect.addEventListener('change', function() {
+            updateRequired(editCategorySelect, editLocationInput, editRequiredLabel);
+        });
+    }
+})();
+
+function editLivingExpenseFromButton(button) {
+    var categorySelect = document.getElementById('edit-category-select');
+    var locationInput = document.getElementById('edit-location');
+    var requiredLabel = document.getElementById('edit-location-required-label');
+
+    categorySelect.value = button.dataset.category;
+    locationInput.value = button.dataset.location || '';
+    document.getElementById('edit-amount').value = button.dataset.amount;
+    document.getElementById('edit-note').value = button.dataset.note || '';
+    locationInput.required = categorySelect.value === 'food';
+    requiredLabel.textContent = locationInput.required ? '（必須）' : '（任意）';
+    document.getElementById('edit-living-expense-form').setAttribute(
+        'hx-post',
+        '/month/{{ year }}/{{ month }}/living-expenses/' + button.dataset.id
+    );
+    document.getElementById('edit-living-expense-modal').classList.remove('hidden');
+}
+
+function closeEditLivingModal() {
+    document.getElementById('edit-living-expense-modal').classList.add('hidden');
+}
+
+document.getElementById('edit-living-expense-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeEditLivingModal();
+});
+</script>

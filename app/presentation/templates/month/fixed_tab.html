@@ -1,19 +1,18 @@
 <div id="fixed-items-content">
     <h3 class="text-lg font-semibold mb-4">固定費</h3>
-    
-    <!-- 固定費項目追加フォーム -->
+
     <div class="mb-6 p-4 bg-gray-50 rounded-lg">
         <h4 class="font-medium mb-3 text-gray-700">固定費項目を追加</h4>
-        <form 
+        <form
             hx-post="/month/{{ year }}/{{ month }}/fixed-items"
             hx-target="#fixed-items-content"
             hx-swap="outerHTML"
             class="flex space-x-2"
         >
-            <input 
-                type="text" 
-                name="name" 
-                placeholder="項目名（例：家賃）" 
+            <input
+                type="text"
+                name="name"
+                placeholder="項目名（例: 家賃）"
                 required
                 class="flex-1 border border-gray-300 rounded-md px-3 py-2"
             >
@@ -22,12 +21,11 @@
             </button>
         </form>
     </div>
-    
-    <!-- 固定費履歴追加フォーム -->
+
     {% if all_fixed_items %}
     <div class="mb-6 p-4 bg-gray-50 rounded-lg">
         <h4 class="font-medium mb-3 text-gray-700">固定費履歴を追加</h4>
-        <form 
+        <form
             hx-post="/month/{{ year }}/{{ month }}/fixed-item-histories"
             hx-target="#fixed-items-content"
             hx-swap="outerHTML"
@@ -36,8 +34,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">固定費項目</label>
-                    <select 
-                        name="fixed_item_id" 
+                    <select
+                        name="fixed_item_id"
                         required
                         class="w-full border border-gray-300 rounded-md px-3 py-2"
                     >
@@ -50,9 +48,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">適用開始年月</label>
                     <div class="flex space-x-2">
-                        <input 
-                            type="number" 
-                            name="effective_year" 
+                        <input
+                            type="number"
+                            name="effective_year"
                             value="{{ year }}"
                             min="2000"
                             max="9999"
@@ -60,9 +58,9 @@
                             class="w-24 border border-gray-300 rounded-md px-3 py-2"
                             placeholder="年"
                         >
-                        <input 
-                            type="number" 
-                            name="effective_month" 
+                        <input
+                            type="number"
+                            name="effective_month"
                             value="{{ month }}"
                             min="1"
                             max="12"
@@ -76,9 +74,9 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
-                    <input 
-                        type="number" 
-                        name="amount" 
+                    <input
+                        type="number"
+                        name="amount"
                         min="0"
                         required
                         class="w-full border border-gray-300 rounded-md px-3 py-2"
@@ -86,8 +84,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">カード紐づけ（任意）</label>
-                    <select 
-                        name="card_id" 
+                    <select
+                        name="card_id"
                         class="w-full border border-gray-300 rounded-md px-3 py-2"
                     >
                         <option value="">なし</option>
@@ -99,13 +97,13 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">カード請求に含む</label>
-                    <select 
-                        name="included_in_card" 
+                    <label class="block text-sm font-medium text-gray-700 mb-1">カード請求に含める</label>
+                    <select
+                        name="included_in_card"
                         class="w-full border border-gray-300 rounded-md px-3 py-2"
                     >
-                        <option value="false">含まない</option>
-                        <option value="true">含む</option>
+                        <option value="false">含めない</option>
+                        <option value="true">含める</option>
                     </select>
                 </div>
             </div>
@@ -117,15 +115,15 @@
         </form>
     </div>
     {% endif %}
-    
-    <!-- 固定費一覧 -->
-    <div>
+
+    <div class="mb-8">
+        <h4 class="font-medium text-gray-800 mb-3">この月に有効な固定費</h4>
         {% if active_items %}
         <div class="space-y-4">
             {% for item in active_items %}
             <div class="bg-white border border-gray-200 rounded-lg p-4">
                 <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-medium text-gray-900">{{ item.name }}</h4>
+                    <h5 class="font-medium text-gray-900">{{ item.name }}</h5>
                     <span class="text-sm text-gray-500">
                         適用開始: {{ item.effective_from.year }}年{{ item.effective_from.month }}月
                     </span>
@@ -140,9 +138,7 @@
                         <span class="ml-2">
                             {% if item.card_id %}
                                 {% for card in cards %}
-                                    {% if card.id == item.card_id %}
-                                        {{ card.name }}
-                                    {% endif %}
+                                    {% if card.id == item.card_id %}{{ card.name }}{% endif %}
                                 {% endfor %}
                             {% else %}
                                 なし
@@ -150,25 +146,119 @@
                         </span>
                     </div>
                     <div>
-                        <span class="text-sm text-gray-600">カード含有:</span>
+                        <span class="text-sm text-gray-600">カード請求:</span>
                         <span class="ml-2">
                             {% if item.included_in_card %}
-                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">含む</span>
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">含める</span>
                             {% else %}
-                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">含まない</span>
+                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">含めない</span>
                             {% endif %}
                         </span>
                     </div>
                 </div>
-                <!-- TODO: 変更・削除ボタンは後続フェーズで実装 -->
+                <form
+                    hx-post="/month/{{ year }}/{{ month }}/fixed-items/{{ item.fixed_item_id }}/end"
+                    hx-target="#fixed-items-content"
+                    hx-swap="outerHTML"
+                    class="mt-4 flex flex-wrap items-end gap-2 border-t border-gray-100 pt-3"
+                >
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">終了年</label>
+                        <input
+                            type="number"
+                            name="effective_year"
+                            value="{{ year }}"
+                            min="2000"
+                            max="9999"
+                            required
+                            class="w-24 border border-gray-300 rounded-md px-3 py-2 text-sm"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">終了月</label>
+                        <input
+                            type="number"
+                            name="effective_month"
+                            value="{{ month }}"
+                            min="1"
+                            max="12"
+                            required
+                            class="w-20 border border-gray-300 rounded-md px-3 py-2 text-sm"
+                        >
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                        運用終了
+                    </button>
+                </form>
             </div>
             {% endfor %}
         </div>
         {% else %}
         <div class="bg-gray-50 rounded-lg p-6 text-center">
-            <p class="text-gray-500">固定費が登録されていません。</p>
+            <p class="text-gray-500">この月に有効な固定費は登録されていません。</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div>
+        <h4 class="font-medium text-gray-800 mb-3">固定費履歴</h4>
+        {% if all_fixed_items %}
+        <div class="space-y-4">
+            {% for item in all_fixed_items %}
+            {% set histories = histories_by_item.get(item.id, []) %}
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h5 class="font-medium text-gray-900 mb-3">{{ item.name }}</h5>
+                {% if histories %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">適用開始</th>
+                                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">カード</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">カード請求</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for history in histories %}
+                            <tr>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                    {{ history.effective_from.year }}年{{ history.effective_from.month }}月
+                                </td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-right {% if history.is_deleted() %}text-red-600{% else %}text-gray-900{% endif %}">
+                                    {% if history.is_deleted() %}
+                                        運用終了
+                                    {% else %}
+                                        {{ "{:,}".format(history.amount.amount) }}円
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                    {% if history.card_id %}
+                                        {% for card in cards %}
+                                            {% if card.id == history.card_id %}{{ card.name }}{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        なし
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                    {% if history.included_in_card %}含める{% else %}含めない{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-600">履歴は登録されていません。</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-50 rounded-lg p-6 text-center">
+            <p class="text-gray-500">固定費項目が登録されていません。</p>
         </div>
         {% endif %}
     </div>
 </div>
-
