@@ -66,6 +66,41 @@
             </div>
         </div>
         
+        <!-- 消費理由メモ -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold mb-2 text-gray-800">消費理由メモ</h4>
+            <p class="text-sm text-gray-600 mb-4">
+                当月の消費が平均以上／平均以下になった理由を記録します（500文字以内）。
+                年次ダッシュボードの変動費を展開すると表示されます。
+            </p>
+
+            {% if note_error %}
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p class="text-sm text-red-700">{{ note_error }}</p>
+            </div>
+            {% endif %}
+
+            {% if note_saved %}
+            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                <p class="text-sm text-green-700">メモを保存しました。</p>
+            </div>
+            {% endif %}
+
+            <form hx-post="/month/{{ year }}/{{ month }}/note" hx-target="#tab-content" hx-swap="innerHTML">
+                <textarea name="note" rows="4" maxlength="500"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="例：帰省の交通費と家電の買い替えで平均より支出が多かった。">{{ month_note.note if month_note else "" }}</textarea>
+                <div class="mt-3 flex items-center space-x-3">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        保存
+                    </button>
+                    <span class="text-xs text-gray-500">
+                        空欄で保存するとメモを削除します。
+                    </span>
+                </div>
+            </form>
+        </div>
+
         <!-- 内訳 -->
         <div class="bg-gray-50 rounded-lg p-6">
             <h4 class="text-lg font-semibold mb-4 text-gray-800">計算式</h4>

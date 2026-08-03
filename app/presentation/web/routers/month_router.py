@@ -15,8 +15,13 @@ from app.application.port.fixed_item_repository import FixedItemRepository
 from app.application.port.income_repository import IncomeRepository
 from app.application.port.logger import Logger
 from app.application.port.living_expense_repository import LivingExpenseRepository
+from app.application.port.month_note_repository import MonthNoteRepository
 from app.application.port.withdrawal_repository import WithdrawalRepository
 from app.application.usecase.get_month_summary import GetMonthSummaryUseCase
+from app.application.usecase.manage_month_note import (
+    ManageMonthNoteUseCase,
+    SaveMonthNoteCommand,
+)
 from app.application.usecase.manage_cash import (
     AddWithdrawalCommand,
     DeleteWithdrawalCommand,
@@ -67,6 +72,9 @@ from app.infrastructure.persistence.repositories.sqlalchemy_income_repository im
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_living_expense_repository import (
     SqlAlchemyLivingExpenseRepository,
+)
+from app.infrastructure.persistence.repositories.sqlalchemy_month_note_repository import (
+    SqlAlchemyMonthNoteRepository,
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_withdrawal_repository import (
     SqlAlchemyWithdrawalRepository,
@@ -205,6 +213,21 @@ def provide_manage_living_expenses_uc(
     )
 
 
+def provide_month_note_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> MonthNoteRepository:
+    """MonthNoteRepositoryのDI"""
+    return SqlAlchemyMonthNoteRepository(session)
+
+
+def provide_manage_month_note_uc(
+    month_note_repo: Annotated[MonthNoteRepository, Depends(provide_month_note_repo)],
+    logger: Annotated[Logger, Depends(provide_logger)],
+) -> ManageMonthNoteUseCase:
+    """ManageMonthNoteUseCaseのDI"""
+    return ManageMonthNoteUseCase(month_note_repo=month_note_repo, logger=logger)
+
+
 def provide_get_month_summary_uc(
     income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)],
     fixed_item_history_repo: Annotated[
@@ -263,6 +286,7 @@ async def month_page(
     month: int,
     income_repo: Annotated[IncomeRepository, Depends(provide_income_repo)],
     summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)],
+    month_note_uc: Annotated[ManageMonthNoteUseCase, Depends(provide_manage_month_note_uc)],
 ) -> HTMLResponse:
     """月次画面表示"""
     from datetime import datetime
@@ -295,6 +319,7 @@ async def month_page(
     years = get_years_with_data(current_year, years_with_data)
 
     result = await summary_uc.execute(year, month)
+    month_note = await month_note_uc.get_note(year, month)
 
     return templates.TemplateResponse(
         "month/index.html",
@@ -307,6 +332,7 @@ async def month_page(
             "warnings": result.warnings,
             "cash_spent_uncertain": result.cash_spent_uncertain,
             "variable_card_negative": result.variable_card_negative,
+            "month_note": month_note,
             "prev_year": prev_ym.year,
             "prev_month": prev_ym.month,
             "next_year": next_ym.year,
@@ -386,12 +412,37 @@ async def register_income(
     )
 
 
+def _summary_tab_context(
+    request: Request,
+    year: int,
+    month: int,
+    result,
+    month_note,
+    note_error: str | None = None,
+    note_saved: bool = False,
+) -> dict:
+    """集計タブ用テンプレートコンテキスト"""
+    return {
+        "request": request,
+        "year": year,
+        "month": month,
+        "summary": result.summary,
+        "warnings": result.warnings,
+        "cash_spent_uncertain": result.cash_spent_uncertain,
+        "variable_card_negative": result.variable_card_negative,
+        "month_note": month_note,
+        "note_error": note_error,
+        "note_saved": note_saved,
+    }
+
+
 @router.get("/month/{year}/{month}/tab/summary", response_class=HTMLResponse)
 async def summary_tab(
     request: Request,
     year: int,
     month: int,
     summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)],
+    month_note_uc: Annotated[ManageMonthNoteUseCase, Depends(provide_manage_month_note_uc)],
 ) -> HTMLResponse:
     """集計タブコンテンツ"""
     from fastapi.templating import Jinja2Templates
@@ -399,18 +450,46 @@ async def summary_tab(
     templates = Jinja2Templates(directory="app/presentation/templates")
 
     result = await summary_uc.execute(year, month)
+    month_note = await month_note_uc.get_note(year, month)
 
     return templates.TemplateResponse(
         "month/summary_tab.html",
-        {
-            "request": request,
-            "year": year,
-            "month": month,
-            "summary": result.summary,
-            "warnings": result.warnings,
-            "cash_spent_uncertain": result.cash_spent_uncertain,
-            "variable_card_negative": result.variable_card_negative,
-        },
+        _summary_tab_context(request, year, month, result, month_note),
+    )
+
+
+@router.post("/month/{year}/{month}/note", response_class=HTMLResponse)
+async def save_month_note(
+    request: Request,
+    year: int,
+    month: int,
+    summary_uc: Annotated[GetMonthSummaryUseCase, Depends(provide_get_month_summary_uc)],
+    month_note_uc: Annotated[ManageMonthNoteUseCase, Depends(provide_manage_month_note_uc)],
+    note: str = Form(default=""),
+) -> HTMLResponse:
+    """月次メモ（平均以上／以下に消費した理由）を保存"""
+    from fastapi.templating import Jinja2Templates
+
+    templates = Jinja2Templates(directory="app/presentation/templates")
+
+    result = await summary_uc.execute(year, month)
+
+    try:
+        month_note = await month_note_uc.save_note(
+            SaveMonthNoteCommand(year=year, month=month, note=note)
+        )
+    except ValueError as e:
+        month_note = await month_note_uc.get_note(year, month)
+        return templates.TemplateResponse(
+            "month/summary_tab.html",
+            _summary_tab_context(
+                request, year, month, result, month_note, note_error=str(e)
+            ),
+        )
+
+    return templates.TemplateResponse(
+        "month/summary_tab.html",
+        _summary_tab_context(request, year, month, result, month_note, note_saved=True),
     )
 
 

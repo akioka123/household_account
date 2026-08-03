@@ -135,7 +135,15 @@ class SqlAlchemyMonthSummaryRepository:
         profit_amount = MonthCalculator.calculate_profit_amount(net_income, fixed_total, variable_total)
 
         # 月次サマリを作成
-        summary = MonthSummary.calculate(ym, net_income, fixed_total, variable_total, profit_amount)
+        summary = MonthSummary.calculate(
+            ym,
+            net_income,
+            fixed_total,
+            variable_total,
+            profit_amount,
+            cash_spent=cash_spent,
+            variable_card=variable_card_total,
+        )
 
         return summary
 

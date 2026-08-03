@@ -8,6 +8,7 @@ import pytest
 from app.application.port.income_repository import IncomeRepository
 from app.application.port.living_expense_repository import LivingExpenseRepository
 from app.application.port.logger import Logger
+from app.application.port.month_note_repository import MonthNoteRepository
 from app.application.port.month_summary_repository import MonthSummaryRepository
 from app.application.usecase.get_dashboard_data import (
     DashboardData,
@@ -20,6 +21,7 @@ from app.domain.model.living_expense import (
 )
 from app.domain.model.income import Income
 from app.domain.model.money import Money
+from app.domain.model.month_note import MonthNote
 from app.domain.model.month_summary import MonthSummary
 from app.domain.model.year_month import YearMonth
 
@@ -49,6 +51,14 @@ def fake_living_expense_repo() -> LivingExpenseRepository:
 
 
 @pytest.fixture
+def fake_month_note_repo() -> MonthNoteRepository:
+    """Fake MonthNoteRepository"""
+    repo = MagicMock(spec=MonthNoteRepository)
+    repo.find_by_year = AsyncMock(return_value={})
+    return repo
+
+
+@pytest.fixture
 def fake_logger() -> Logger:
     """Fake Logger"""
     logger = MagicMock(spec=Logger)
@@ -61,6 +71,7 @@ async def test_get_dashboard_data_empty(
     fake_month_summary_repo: MonthSummaryRepository,
     fake_income_repo: IncomeRepository,
     fake_living_expense_repo: LivingExpenseRepository,
+    fake_month_note_repo: MonthNoteRepository,
     fake_logger: Logger,
 ) -> None:
     """データが空の場合のダッシュボードデータ取得"""
@@ -68,6 +79,7 @@ async def test_get_dashboard_data_empty(
         month_summary_repo=fake_month_summary_repo,
         income_repo=fake_income_repo,
         living_expense_repo=fake_living_expense_repo,
+        month_note_repo=fake_month_note_repo,
         logger=fake_logger,
     )
 
@@ -79,6 +91,8 @@ async def test_get_dashboard_data_empty(
     assert result.annual_net == 0
     assert result.living_expenses_by_month[YearMonth(2024, 1)][LIVING_EXPENSE_CATEGORY_FOOD].amount == 0
     assert fake_living_expense_repo.find_by_year_month.await_count == 12
+    assert result.month_notes == {}
+    assert result.variable_average == 0
 
 
 @pytest.mark.asyncio
@@ -86,6 +100,7 @@ async def test_get_dashboard_data_with_data(
     fake_month_summary_repo: MonthSummaryRepository,
     fake_income_repo: IncomeRepository,
     fake_living_expense_repo: LivingExpenseRepository,
+    fake_month_note_repo: MonthNoteRepository,
     fake_logger: Logger,
 ) -> None:
     """データがある場合のダッシュボードデータ取得"""
@@ -98,6 +113,8 @@ async def test_get_dashboard_data_with_data(
         fixed_total=Money(100000),
         variable_total=Money(150000),
         profit=Money(150000),
+        cash_spent=Money(50000),
+        variable_card=Money(100000),
     )
     summary2 = MonthSummary(
         year_month=ym2,
@@ -105,6 +122,8 @@ async def test_get_dashboard_data_with_data(
         fixed_total=Money(100000),
         variable_total=Money(200000),
         profit=Money(100000),
+        cash_spent=Money(60000),
+        variable_card=Money(140000),
     )
     fake_month_summary_repo.find_by_year = AsyncMock(
         return_value=[summary1, summary2]
@@ -148,10 +167,15 @@ async def test_get_dashboard_data_with_data(
         else []
     )
 
+    fake_month_note_repo.find_by_year = AsyncMock(
+        return_value={ym2: MonthNote(id=1, year_month=ym2, note="家電の買い替えで支出増")}
+    )
+
     usecase = GetDashboardDataUseCase(
         month_summary_repo=fake_month_summary_repo,
         income_repo=fake_income_repo,
         living_expense_repo=fake_living_expense_repo,
+        month_note_repo=fake_month_note_repo,
         logger=fake_logger,
     )
 
@@ -164,3 +188,16 @@ async def test_get_dashboard_data_with_data(
     assert result.living_expenses_by_month[ym1][LIVING_EXPENSE_CATEGORY_FOOD].amount == 12000
     assert result.living_expenses_by_month[ym1][LIVING_EXPENSE_CATEGORY_ELECTRICITY].amount == 8000
     assert result.living_expenses_by_month[ym2][LIVING_EXPENSE_CATEGORY_FOOD].amount == 0
+
+    # 生活費合計（内訳エクスパンドの見出しに使用）
+    assert result.living_total(ym1) == 20000
+    assert result.living_total(ym2) == 0
+
+    # 変動費の月平均と平均差
+    assert result.variable_average == 175000  # (150000 + 200000) / 2
+    assert result.variable_diff(ym1) == -25000
+    assert result.variable_diff(ym2) == 25000
+
+    # メモ
+    assert result.note_text(ym1) == ""
+    assert result.note_text(ym2) == "家電の買い替えで支出増"

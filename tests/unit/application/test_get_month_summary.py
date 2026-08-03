@@ -212,6 +212,9 @@ async def test_get_month_summary_with_card_statements(
 
     assert result.summary.variable_total.amount == 50000
     assert result.summary.profit.amount == 350000  # 400000 - 50000
+    # 内訳：カード変動費のみ
+    assert result.summary.variable_card.amount == 50000
+    assert result.summary.cash_spent.amount == 0
 
 
 @pytest.mark.asyncio
@@ -272,6 +275,9 @@ async def test_get_month_summary_with_cash(
     assert result.summary.variable_total.amount == 70000
     assert result.summary.profit.amount == 330000  # 400000 - 70000
     assert result.cash_spent_uncertain is False
+    # 内訳：現金支出のみ
+    assert result.summary.cash_spent.amount == 70000
+    assert result.summary.variable_card.amount == 0
 
 
 @pytest.mark.asyncio
