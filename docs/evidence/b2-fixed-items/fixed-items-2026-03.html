@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>固定費一覧</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <header class="bg-white shadow-md mb-6">
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-800">家計簿ダッシュボード</h1>
+            
+            <div class="flex items-center space-x-4">
+                <!-- 年選択ドロップダウン -->
+                <div class="flex items-center space-x-2">
+                    <label for="year-select" class="text-sm font-medium text-gray-700">年:</label>
+                    <select 
+                        id="year-select" 
+                        name="year"
+                        class="border border-gray-300 rounded-md px-3 py-1 text-sm"
+                        hx-target="#main-content"
+                        hx-trigger="change"
+                        hx-swap="innerHTML"
+                        onchange="this.setAttribute('hx-get', '/dashboard/' + this.value)"
+                    >
+                        
+                        <option value="2021" >
+                            2021
+                            
+                        </option>
+                        
+                        <option value="2022" >
+                            2022
+                            
+                        </option>
+                        
+                        <option value="2023" >
+                            2023
+                            
+                        </option>
+                        
+                        <option value="2024" >
+                            2024
+                            
+                        </option>
+                        
+                        <option value="2025" >
+                            2025
+                            
+                        </option>
+                        
+                        <option value="2026" selected>
+                            2026
+                            
+                        </option>
+                        
+                        <option value="2027" >
+                            2027
+                            
+                        </option>
+                        
+                        <option value="2028" >
+                            2028
+                            
+                        </option>
+                        
+                        <option value="2029" >
+                            2029
+                            
+                        </option>
+                        
+                        <option value="2030" >
+                            2030
+                            
+                        </option>
+                        
+                        <option value="2031" >
+                            2031
+                            
+                        </option>
+                        
+                    </select>
+                    <script>
+                    // 初期値を設定（ページロード時）
+                    (function() {
+                        const select = document.getElementById('year-select');
+                        if (select) {
+                            const selectedValue = select.value;
+                            select.setAttribute('hx-get', '/dashboard/' + selectedValue);
+                        }
+                    })();
+                    </script>
+                </div>
+                
+                <!-- グローバルナビゲーション -->
+                <nav class="flex space-x-4">
+                    <a href="/dashboard/overall" class="text-blue-600 hover:text-blue-800 font-medium">
+                        総合ダッシュボード
+                    </a>
+                    <a href="/dashboard/2026" class="text-blue-600 hover:text-blue-800 font-medium">
+                        年次ダッシュボード
+                    </a>
+                    <a href="/fixed-items" class="text-blue-600 hover:text-blue-800 font-medium">
+                        固定費一覧
+                    </a>
+                    <a href="/settings" class="text-blue-600 hover:text-blue-800 font-medium">
+                        設定
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+    
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        
+<div id="fixed-items-content" class="bg-white rounded-lg shadow p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h2 class="text-2xl font-bold">固定費一覧</h2>
+
+        <!-- 基準年月セレクタ（changeはバブリングするので親要素で受ける） -->
+        <div
+            class="flex items-center space-x-2"
+            hx-get="/fixed-items"
+            hx-target="#fixed-items-content"
+            hx-swap="outerHTML"
+            hx-trigger="change"
+            hx-vals='js:{ym: document.getElementById("base-year").value + "-" + String(document.getElementById("base-month").value).padStart(2, "0")}'
+        >
+            <label for="base-year" class="text-sm font-medium text-gray-700">基準年月:</label>
+            <select id="base-year" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                
+                <option value="2021" >2021年</option>
+                
+                <option value="2022" >2022年</option>
+                
+                <option value="2023" >2023年</option>
+                
+                <option value="2024" >2024年</option>
+                
+                <option value="2025" >2025年</option>
+                
+                <option value="2026" selected>2026年</option>
+                
+                <option value="2027" >2027年</option>
+                
+                <option value="2028" >2028年</option>
+                
+                <option value="2029" >2029年</option>
+                
+                <option value="2030" >2030年</option>
+                
+                <option value="2031" >2031年</option>
+                
+            </select>
+            <select id="base-month" class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                
+                <option value="1" >1月</option>
+                
+                <option value="2" >2月</option>
+                
+                <option value="3" selected>3月</option>
+                
+                <option value="4" >4月</option>
+                
+                <option value="5" >5月</option>
+                
+                <option value="6" >6月</option>
+                
+                <option value="7" >7月</option>
+                
+                <option value="8" >8月</option>
+                
+                <option value="9" >9月</option>
+                
+                <option value="10" >10月</option>
+                
+                <option value="11" >11月</option>
+                
+                <option value="12" >12月</option>
+                
+            </select>
+        </div>
+    </div>
+
+    <!-- サマリ -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+            <p class="text-sm text-gray-600">月額合計</p>
+            <p class="text-2xl font-bold text-blue-700">112,324円</p>
+        </div>
+        <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+            <p class="text-sm text-gray-600">年額換算</p>
+            <p class="text-2xl font-bold text-indigo-700">1,347,888円</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p class="text-sm text-gray-600">有効項目</p>
+            <p class="text-2xl font-bold text-gray-700">3件</p>
+        </div>
+    </div>
+
+    <!-- 有効な固定費 -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-medium text-gray-800">
+                有効な固定費（2026年3月時点）
+            </h3>
+            
+            <button
+                type="button"
+                data-fixed-items-toggle-all
+                data-expanded="false"
+                class="text-sm text-blue-600 hover:text-blue-800"
+            >
+                すべての履歴を表示
+            </button>
+            
+        </div>
+
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">項目名</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">月額</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">年額換算</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">割合</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">カード</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">カード請求</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">適用開始</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">経過月数</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <button
+                                type="button"
+                                data-fixed-item-toggle="2"
+                                class="mr-1 text-gray-400 hover:text-gray-700"
+                                aria-label="改定履歴を開閉"
+                            >▸</button>
+                            家賃
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                            60,000円
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            720,000円
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            53.4%
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            なし
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">
+                            
+                            <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">含めない</span>
+                            
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                            2026年1月
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            2ヶ月
+                        </td>
+                    </tr>
+                    <tr
+                        id="fixed-item-history-2"
+                        data-fixed-item-history
+                        class="hidden bg-gray-50"
+                    >
+                        <td colspan="8" class="px-8 py-3">
+                            
+
+<table class="min-w-full divide-y divide-gray-200">
+    <thead>
+        <tr>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">適用開始</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">金額</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">前回差分</th>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">カード</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2026年1月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                60,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2026年5月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-red-600">
+                運用終了
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2026年5月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                60,440円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-red-600">+60,440円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+    </tbody>
+</table>
+
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <button
+                                type="button"
+                                data-fixed-item-toggle="4"
+                                class="mr-1 text-gray-400 hover:text-gray-700"
+                                aria-label="改定履歴を開閉"
+                            >▸</button>
+                            投資信託
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                            35,000円
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            420,000円
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            31.2%
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            なし
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">
+                            
+                            <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">含めない</span>
+                            
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                            2025年7月
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            8ヶ月
+                        </td>
+                    </tr>
+                    <tr
+                        id="fixed-item-history-4"
+                        data-fixed-item-history
+                        class="hidden bg-gray-50"
+                    >
+                        <td colspan="8" class="px-8 py-3">
+                            
+
+<table class="min-w-full divide-y divide-gray-200">
+    <thead>
+        <tr>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">適用開始</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">金額</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">前回差分</th>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">カード</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2021年1月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                25,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2023年6月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                25,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">±0円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2024年1月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                33,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-red-600">+8,000円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2025年7月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                35,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-red-600">+2,000円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+    </tbody>
+</table>
+
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <button
+                                type="button"
+                                data-fixed-item-toggle="3"
+                                class="mr-1 text-gray-400 hover:text-gray-700"
+                                aria-label="改定履歴を開閉"
+                            >▸</button>
+                            保険料
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                            17,324円
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            207,888円
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            15.4%
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            JCB W
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">
+                            
+                            <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">含める</span>
+                            
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
+                            2025年9月
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            6ヶ月
+                        </td>
+                    </tr>
+                    <tr
+                        id="fixed-item-history-3"
+                        data-fixed-item-history
+                        class="hidden bg-gray-50"
+                    >
+                        <td colspan="8" class="px-8 py-3">
+                            
+
+<table class="min-w-full divide-y divide-gray-200">
+    <thead>
+        <tr>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">適用開始</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">金額</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">前回差分</th>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">カード</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2025年9月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                17,324円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                JCB W
+            </td>
+        </tr>
+        
+    </tbody>
+</table>
+
+                        </td>
+                    </tr>
+                    
+                </tbody>
+                <tfoot class="bg-gray-50">
+                    <tr>
+                        <td class="px-4 py-2 text-sm font-semibold text-gray-800">合計</td>
+                        <td class="px-4 py-2 text-sm text-right font-bold text-gray-900">
+                            112,324円
+                        </td>
+                        <td class="px-4 py-2 text-sm text-right font-bold text-gray-900">
+                            1,347,888円
+                        </td>
+                        <td colspan="5"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+    </div>
+
+    <!-- 運用終了済み -->
+    
+    <div>
+        <h3 class="font-medium text-gray-800 mb-3">運用終了済み（1件）</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">項目名</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">終了年月</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">経過月数</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <button
+                                type="button"
+                                data-fixed-item-toggle="1"
+                                class="mr-1 text-gray-400 hover:text-gray-700"
+                                aria-label="改定履歴を開閉"
+                            >▸</button>
+                            実家
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-red-600">
+                            2026年1月
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-600">
+                            2ヶ月
+                        </td>
+                    </tr>
+                    <tr
+                        id="fixed-item-history-1"
+                        data-fixed-item-history
+                        class="hidden bg-gray-50"
+                    >
+                        <td colspan="3" class="px-8 py-3">
+                            
+
+<table class="min-w-full divide-y divide-gray-200">
+    <thead>
+        <tr>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">適用開始</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">金額</th>
+            <th class="px-3 py-1 text-right text-xs font-medium text-gray-500">前回差分</th>
+            <th class="px-3 py-1 text-left text-xs font-medium text-gray-500">カード</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2021年1月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                20,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2023年10月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                25,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-red-600">+5,000円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2025年4月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                40,000円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-red-600">+15,000円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2026年1月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-red-600">
+                運用終了
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2026年5月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-gray-900">
+                60,440円
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-red-600">+60,440円</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                2026年5月
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right text-red-600">
+                運用終了
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-right">
+                
+                <span class="text-gray-400">—</span>
+                
+            </td>
+            <td class="px-3 py-1 whitespace-nowrap text-sm text-gray-700">
+                なし
+            </td>
+        </tr>
+        
+    </tbody>
+</table>
+
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>
+<script src="/static/js/fixed-items-expand.js"></script>
+
+    </main>
+    
+    <footer class="bg-white border-t mt-12 py-6">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between text-sm text-gray-600">
+            <div>
+                <span>家計簿ダッシュボード v0.1.0</span>
+            </div>
+            <div>
+                <a href="#" class="text-blue-600 hover:text-blue-800">ヘルプ</a>
+            </div>
+        </div>
+    </div>
+</footer>
+    
+    <!-- htmx CDN -->
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+<!-- Chart.js (グラフ表示用) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+</body>
+</html>
