@@ -1,152 +1,76 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
 
-# PyInstaller
-*.manifest
-*.spec
+# パッケージング成果物（ルート直下のみ。app/lib 等の実装ディレクトリを巻き込まないよう先頭に / を付ける）
+/build/
+/dist/
+/sdist/
+/wheels/
+/.eggs/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# 仮想環境
+venv/
+.venv/
+env/
+ENV/
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath
-*.sage.py
-
-# Environments
+# 環境変数（秘密情報を含むためコミットしない）
 .env
 .env.local
 .env.*.local
-.venv/
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
+# テスト・型チェック・Lint のキャッシュ
+.pytest_cache/
 .mypy_cache/
-.dmypy.json
-dmypy.json
+.ruff_cache/
+.tox/
+.nox/
+.cache
+.hypothesis/
 
-# Pyre type checker
-.pyre/
+# カバレッジレポート
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
 
-# pytype static type analyzer
-.pytype/
+# Node（jsdom 等の検証ツール用。package.json / package-lock.json は追跡する）
+node_modules/
+npm-debug.log*
+yarn-error.log*
 
-# Cython debug symbols
-cython_debug/
+# ローカルDB・ログ
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/
 
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.project
-.classpath
-.settings/
 
 # OS
 .DS_Store
-.DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+ehthumbs.db
 Desktop.ini
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-*.log
-logs/
-
-# Docker
-.dockerignore
-
-# Temporary files
+# 一時ファイル
 *.tmp
 *.temp
 *.bak
-*.swp
-*~
 
-# Alembic
-# 必要に応じてコメントアウトを解除
-# alembic/versions/*.pyc
+# Claude Code（ADR-001: エージェント/スキル/設定の正本は ~/.claude のみとし、
+# プロジェクト側に複製を置かないため、リポジトリでは追跡しない）
+.claude/
