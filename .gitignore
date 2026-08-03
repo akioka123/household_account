@@ -71,6 +71,7 @@ Desktop.ini
 *.temp
 *.bak
 
-# Claude Code（ADR-001: エージェント/スキル/設定の正本は ~/.claude のみとし、
-# プロジェクト側に複製を置かないため、リポジトリでは追跡しない）
-.claude/
+# Claude Code（ADR-009: プロジェクト固有の設定・エージェント/スキルは追跡する。
+# 除外するのは個人設定と作業用ディレクトリのみ）
+.claude/settings.local.json
+.claude/worktrees/
