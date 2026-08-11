@@ -1,7 +1,7 @@
 """固定費履歴のSQLAlchemyモデル"""
 from __future__ import annotations
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.persistence.database import Base
@@ -11,6 +11,14 @@ class FixedItemHistoryModel(Base):
     """固定費履歴テーブルのSQLAlchemyモデル"""
 
     __tablename__ = "fixed_item_histories"
+    __table_args__ = (
+        # 同一項目・同一適用開始年月の金額は1つに定まる（同月内の訂正は上書き）
+        UniqueConstraint(
+            "fixed_item_id",
+            "effective_from",
+            name="uq_fixed_item_histories_item_effective_from",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     fixed_item_id: Mapped[int] = mapped_column(

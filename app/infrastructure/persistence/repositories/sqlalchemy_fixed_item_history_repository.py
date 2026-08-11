@@ -52,17 +52,35 @@ class SqlAlchemyFixedItemHistoryRepository:
         return [h for h in histories if h.is_active_at(ym)]
 
     async def save(self, history: FixedItemHistory) -> None:
-        """固定費履歴を保存（新規作成）"""
+        """固定費履歴を保存（新規作成または更新）
+
+        同一項目・同一適用開始年月の行が既にある場合は上書きする（同月内の訂正）。
+        """
         ym_str = f"{history.effective_from.year:04d}-{history.effective_from.month:02d}"
-        model = FixedItemHistoryModel(
-            id=history.id,
-            fixed_item_id=history.fixed_item_id,
-            effective_from=ym_str,
-            amount=history.amount.amount,
-            card_id=history.card_id,
-            included_in_card=history.included_in_card,
+        stmt = select(FixedItemHistoryModel).where(
+            FixedItemHistoryModel.fixed_item_id == history.fixed_item_id,
+            FixedItemHistoryModel.effective_from == ym_str,
         )
-        self._session.add(model)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+
+        if model:
+            # 更新
+            model.amount = history.amount.amount
+            model.card_id = history.card_id
+            model.included_in_card = history.included_in_card
+        else:
+            # 新規作成
+            model = FixedItemHistoryModel(
+                id=history.id,
+                fixed_item_id=history.fixed_item_id,
+                effective_from=ym_str,
+                amount=history.amount.amount,
+                card_id=history.card_id,
+                included_in_card=history.included_in_card,
+            )
+            self._session.add(model)
+
         await self._session.flush()  # awaitを追加
 
     def _to_domain(self, model: FixedItemHistoryModel) -> FixedItemHistory:

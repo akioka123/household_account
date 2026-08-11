@@ -23,6 +23,10 @@ class FixedItemHistoryRepository(Protocol):
         ...
 
     async def save(self, history: FixedItemHistory) -> None:
-        """固定費履歴を保存（新規作成）"""
+        """固定費履歴を保存（新規作成または更新）
+
+        同一の固定費項目・同一の適用開始年月の履歴が既に存在する場合は上書きする。
+        （同じ年月の金額は1つに定まるため、同月内の訂正は追加ではなく上書きになる）
+        """
         ...
 
