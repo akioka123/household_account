@@ -78,3 +78,4 @@ Desktop.ini
 # 除外するのは個人設定と作業用ディレクトリのみ）
 .claude/settings.local.json
 .claude/worktrees/
+backups/
