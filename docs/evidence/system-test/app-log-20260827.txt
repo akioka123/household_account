@@ -1,0 +1,59 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 001, create incomes table
+INFO  [alembic.runtime.migration] Running upgrade 001 -> 002, create cards and settings tables
+INFO  [alembic.runtime.migration] Running upgrade 002 -> 003, create fixed_items and fixed_item_histories tables
+INFO  [alembic.runtime.migration] Running upgrade 003 -> 004, create card_statements table
+INFO  [alembic.runtime.migration] Running upgrade 004 -> 005, create cash_balances and withdrawals tables
+INFO  [alembic.runtime.migration] Running upgrade 005 -> 006, create food_expenses table
+INFO  [alembic.runtime.migration] Running upgrade 006 -> 007, rename food_expenses to living_expenses, add category
+INFO  [alembic.runtime.migration] Running upgrade 007 -> 008, create month_notes table
+INFO  [alembic.runtime.migration] Running upgrade 008 -> 009, 固定費履歴に (fixed_item_id, effective_from) の一意制約を追加
+INFO  [alembic.runtime.migration] Running upgrade 009 -> 010, create living_expense_items table and receipt_image_path column
+INFO:     Will watch for changes in these directories: ['/app/alembic', '/app/app']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [10] using WatchFiles
+INFO:     Started server process [12]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+{"timestamp": "2026-08-27T12:50:31.241546+00:00", "level": "INFO", "logger": "access", "message": "GET / 307", "request_id": "8e7800a0-400c-4a7b-adb1-6e573a9f2af4", "method": "GET", "path": "/", "status_code": 307, "elapsed_time_ms": 13.69, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET / HTTP/1.1" 307 Temporary Redirect
+{"timestamp": "2026-08-27T12:50:31.261607+00:00", "level": "INFO", "logger": "dashboard", "message": "ダッシュボードデータ取得開始: 2026年", "request_id": "f330686d-576d-4245-b9e5-14bdf0594a65", "screen": "dashboard", "year": 2026}
+{"timestamp": "2026-08-27T12:50:31.335219+00:00", "level": "INFO", "logger": "dashboard", "message": "ダッシュボードデータ取得完了: 2026年", "request_id": "f330686d-576d-4245-b9e5-14bdf0594a65", "screen": "dashboard", "year": 2026}
+{"timestamp": "2026-08-27T12:50:31.451842+00:00", "level": "INFO", "logger": "access", "message": "GET /dashboard/2026 200", "request_id": "f330686d-576d-4245-b9e5-14bdf0594a65", "screen": "dashboard", "method": "GET", "path": "/dashboard/2026", "status_code": 200, "elapsed_time_ms": 204.23, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /dashboard/2026 HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:50:31.538713+00:00", "level": "INFO", "logger": "access", "message": "GET /static/js/dashboard-chart.js 200", "request_id": "78d3de4e-caac-4e8a-924c-2e4a0156589d", "method": "GET", "path": "/static/js/dashboard-chart.js", "status_code": 200, "elapsed_time_ms": 12.74, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /static/js/dashboard-chart.js HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:50:31.566539+00:00", "level": "INFO", "logger": "access", "message": "GET /static/js/dashboard-expand.js 200", "request_id": "1dd63f64-0207-4afc-978d-96c68b44e8b4", "method": "GET", "path": "/static/js/dashboard-expand.js", "status_code": 200, "elapsed_time_ms": 9.62, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /static/js/dashboard-expand.js HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:50:31.640304+00:00", "level": "WARNING", "logger": "access", "message": "GET /favicon.ico 404", "request_id": "89dccd5d-1ac7-4086-893c-2b0d0d3485ae", "method": "GET", "path": "/favicon.ico", "status_code": 404, "elapsed_time_ms": 0.67, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+{"timestamp": "2026-08-27T12:50:35.245334+00:00", "level": "INFO", "logger": "access", "message": "GET /month/2026/8 200", "request_id": "b8894e11-9897-48e3-b80b-813d050dfa7b", "screen": "month", "method": "GET", "path": "/month/2026/8", "status_code": 200, "elapsed_time_ms": 130.21, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /month/2026/8 HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:50:35.359079+00:00", "level": "INFO", "logger": "access", "message": "GET /static/js/variable-expenses.js 200", "request_id": "39ae0d8e-a849-47c0-b46d-7821b687bea4", "method": "GET", "path": "/static/js/variable-expenses.js", "status_code": 200, "elapsed_time_ms": 49.25, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /static/js/variable-expenses.js HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:50:35.589341+00:00", "level": "WARNING", "logger": "access", "message": "GET /favicon.ico 404", "request_id": "d2b080ac-9321-4afd-9298-0ea0b62d1c76", "method": "GET", "path": "/favicon.ico", "status_code": 404, "elapsed_time_ms": 0.23, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+{"timestamp": "2026-08-27T12:50:39.382422+00:00", "level": "INFO", "logger": "access", "message": "GET /month/2026/8/tab/living 200", "request_id": "1fb64583-121b-4b13-855b-bf74d6317abe", "screen": "month", "method": "GET", "path": "/month/2026/8/tab/living", "status_code": 200, "elapsed_time_ms": 54.66, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:46176 - "GET /month/2026/8/tab/living HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:51:33.237628+00:00", "level": "INFO", "logger": "month", "message": "レシート作成（画像なし）: 2026年8月", "request_id": "bd0f6aab-4415-4a34-b4d9-ecaea341470c", "screen": "month", "year": 2026, "month": 8, "action": "create_receipt"}
+{"timestamp": "2026-08-27T12:51:33.266988+00:00", "level": "INFO", "logger": "access", "message": "POST /month/2026/8/receipts 200", "request_id": "bd0f6aab-4415-4a34-b4d9-ecaea341470c", "screen": "month", "method": "POST", "path": "/month/2026/8/receipts", "status_code": 200, "elapsed_time_ms": 45.39, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:47264 - "POST /month/2026/8/receipts HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:51:45.478762+00:00", "level": "INFO", "logger": "month", "message": "品目追加: とうふ (108円)", "request_id": "8321f30e-1a45-470d-be03-d5c11e56ce3e", "screen": "month", "living_expense_id": 1, "action": "add_item"}
+{"timestamp": "2026-08-27T12:51:45.515446+00:00", "level": "INFO", "logger": "access", "message": "POST /month/2026/8/receipts/1/items 200", "request_id": "8321f30e-1a45-470d-be03-d5c11e56ce3e", "screen": "month", "method": "POST", "path": "/month/2026/8/receipts/1/items", "status_code": 200, "elapsed_time_ms": 48.02, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:34670 - "POST /month/2026/8/receipts/1/items HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:52:00.292949+00:00", "level": "INFO", "logger": "access", "message": "GET /month/2026/8/tab/summary 200", "request_id": "bba88846-2ce4-4d85-a5c4-0b9a9a88bd27", "screen": "month", "method": "GET", "path": "/month/2026/8/tab/summary", "status_code": 200, "elapsed_time_ms": 77.84, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:59306 - "GET /month/2026/8/tab/summary HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:52:04.978370+00:00", "level": "INFO", "logger": "access", "message": "GET /month/2026/8 200", "request_id": "f3cdad53-f644-4776-b5e8-26364cccaa9d", "screen": "month", "method": "GET", "path": "/month/2026/8", "status_code": 200, "elapsed_time_ms": 565.72, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:59306 - "GET /month/2026/8 HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:52:05.060406+00:00", "level": "WARNING", "logger": "access", "message": "GET /favicon.ico 404", "request_id": "da6d6a42-ef7f-4b5e-afe5-b6fa2916d7be", "method": "GET", "path": "/favicon.ico", "status_code": 404, "elapsed_time_ms": 1.54, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:59306 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+{"timestamp": "2026-08-27T12:52:16.919009+00:00", "level": "INFO", "logger": "access", "message": "GET /month/2026/8 200", "request_id": "f5606111-10b7-4ada-a112-f28156242721", "screen": "month", "method": "GET", "path": "/month/2026/8", "status_code": 200, "elapsed_time_ms": 67.57, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:51434 - "GET /month/2026/8 HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:52:16.959383+00:00", "level": "WARNING", "logger": "access", "message": "GET /favicon.ico 404", "request_id": "967ea1c9-48fc-4426-831a-f0c64c86ae37", "method": "GET", "path": "/favicon.ico", "status_code": 404, "elapsed_time_ms": 1.66, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:51434 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+{"timestamp": "2026-08-27T12:52:20.489325+00:00", "level": "INFO", "logger": "access", "message": "GET /month/2026/8/tab/living 200", "request_id": "0c0073b4-e8ca-40be-9295-aabe5edfeab5", "screen": "month", "method": "GET", "path": "/month/2026/8/tab/living", "status_code": 200, "elapsed_time_ms": 80.97, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:51434 - "GET /month/2026/8/tab/living HTTP/1.1" 200 OK
+{"timestamp": "2026-08-27T12:52:40.784142+00:00", "level": "INFO", "logger": "month", "message": "レシート削除: ID 1", "request_id": "05790dae-706b-4b10-bec5-112dd3576c21", "screen": "month", "living_expense_id": 1, "action": "delete_receipt"}
+{"timestamp": "2026-08-27T12:52:40.820962+00:00", "level": "INFO", "logger": "access", "message": "POST /month/2026/8/receipts/1/delete 200", "request_id": "05790dae-706b-4b10-bec5-112dd3576c21", "screen": "month", "method": "POST", "path": "/month/2026/8/receipts/1/delete", "status_code": 200, "elapsed_time_ms": 59.06, "client_ip": "172.19.0.1"}
+INFO:     172.19.0.1:60372 - "POST /month/2026/8/receipts/1/delete HTTP/1.1" 200 OK

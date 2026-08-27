@@ -1,0 +1,63 @@
+"""月次サマリのエンティティ"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from app.domain.model.money import Money
+from app.domain.model.year_month import YearMonth
+
+
+@dataclass(frozen=True)
+class MonthSummary:
+    """月次サマリ（年月、手取り収入、固定費、変動費、損益）"""
+
+    year_month: YearMonth
+    """対象年月"""
+    net_income: Money
+    """手取り収入合計（salary_net + bonus_net）"""
+    fixed_total: Money
+    """固定費合計"""
+    variable_total: Money
+    """変動費合計"""
+    profit: Money
+    """損益（手取り収入 - 固定費 - 変動費）"""
+    cash_spent: Money = Money(0)
+    """変動費の内訳：現金支出"""
+    variable_card: Money = Money(0)
+    """変動費の内訳：カード変動費"""
+
+    @staticmethod
+    def calculate(
+        year_month: YearMonth,
+        net_income: Money,
+        fixed_total: Money,
+        variable_total: Money,
+        profit_amount: int,
+        cash_spent: Money = Money(0),
+        variable_card: Money = Money(0),
+    ) -> MonthSummary:
+        """月次サマリを計算して作成
+
+        Args:
+            year_month: 対象年月
+            net_income: 手取り収入合計
+            fixed_total: 固定費合計
+            variable_total: 変動費合計
+            profit_amount: 損益の整数値（負の値も許容）
+            cash_spent: 変動費の内訳：現金支出
+            variable_card: 変動費の内訳：カード変動費
+
+        Returns:
+            月次サマリ
+        """
+        # 損益は負の値も保持する（損失を正確に表現するため）
+        profit = Money(profit_amount)
+        return MonthSummary(
+            year_month=year_month,
+            net_income=net_income,
+            fixed_total=fixed_total,
+            variable_total=variable_total,
+            profit=profit,
+            cash_spent=cash_spent,
+            variable_card=variable_card,
+        )

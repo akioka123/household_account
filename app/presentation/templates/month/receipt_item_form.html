@@ -1,0 +1,40 @@
+{# 品目1件追加用フォーム（living_tab.html からレシートごとに include される部分テンプレート） #}
+{# 呼び出し元で living_expense_id 変数を set してから include すること #}
+<form
+    hx-post="/month/{{ year }}/{{ month }}/receipts/{{ living_expense_id }}/items"
+    hx-target="#living-content"
+    hx-swap="outerHTML"
+    class="flex flex-wrap items-end gap-2"
+>
+    <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">品目名</label>
+        <input
+            type="text"
+            name="name"
+            maxlength="100"
+            required
+            class="border border-gray-300 rounded-md px-3 py-2 text-sm"
+        >
+    </div>
+    <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">金額</label>
+        <input
+            type="number"
+            name="amount"
+            min="0"
+            required
+            class="w-28 border border-gray-300 rounded-md px-3 py-2 text-sm"
+        >
+    </div>
+    <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">小分類</label>
+        <select name="sub_category" required class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+            {% for sub in sub_category_order %}
+            <option value="{{ sub }}">{{ sub_category_labels[sub] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+        品目追加
+    </button>
+</form>

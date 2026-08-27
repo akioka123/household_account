@@ -1,0 +1,134 @@
+<div>
+    <h3 class="text-lg font-semibold mb-4">集計</h3>
+    
+    {% if warnings %}
+    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 class="font-medium text-yellow-800 mb-2">⚠️ 警告</h4>
+        <ul class="list-disc list-inside space-y-1">
+            {% for warning in warnings %}
+            <li class="text-sm text-yellow-700">{{ warning }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {% if summary %}
+    <div class="space-y-6">
+        <!-- 収入 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold mb-4 text-gray-800">収入</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <span class="text-sm text-gray-600">手取り収入合計</span>
+                    <p class="text-2xl font-bold text-green-600 mt-1">
+                        {{ "{:,}".format(summary.net_income.amount) }}円
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 支出 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold mb-4 text-gray-800">支出</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <span class="text-sm text-gray-600">固定費合計</span>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">
+                        {{ "{:,}".format(summary.fixed_total.amount) }}円
+                    </p>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-600">変動費合計</span>
+                    <p class="text-xl font-semibold text-gray-900 mt-1">
+                        {{ "{:,}".format(summary.variable_total.amount) }}円
+                    </p>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <span class="text-sm text-gray-600">支出合計</span>
+                <p class="text-2xl font-bold text-red-600 mt-1">
+                    {{ "{:,}".format((summary.fixed_total.amount + summary.variable_total.amount)) }}円
+                </p>
+            </div>
+        </div>
+        
+        <!-- 損益 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold mb-4 text-gray-800">損益</h4>
+            <div class="text-center">
+                <span class="text-sm text-gray-600">当月損益</span>
+                <p class="text-3xl font-bold {% if summary.profit.amount < 0 %}text-red-600{% else %}text-green-600{% endif %} mt-2">
+                    {{ "{:,}".format(summary.profit.amount) }}円
+                </p>
+                <p class="text-xs text-gray-500 mt-2">
+                    （手取り収入 - 固定費 - 変動費）
+                </p>
+            </div>
+        </div>
+        
+        <!-- 消費理由メモ -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold mb-2 text-gray-800">消費理由メモ</h4>
+            <p class="text-sm text-gray-600 mb-4">
+                当月の消費が平均以上／平均以下になった理由を記録します（500文字以内）。
+                年次ダッシュボードの変動費を展開すると表示されます。
+            </p>
+
+            {% if note_error %}
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p class="text-sm text-red-700">{{ note_error }}</p>
+            </div>
+            {% endif %}
+
+            {% if note_saved %}
+            <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                <p class="text-sm text-green-700">メモを保存しました。</p>
+            </div>
+            {% endif %}
+
+            <form hx-post="/month/{{ year }}/{{ month }}/note" hx-target="#tab-content" hx-swap="innerHTML">
+                <textarea name="note" rows="4" maxlength="500"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    placeholder="例：帰省の交通費と家電の買い替えで平均より支出が多かった。">{{ month_note.note if month_note else "" }}</textarea>
+                <div class="mt-3 flex items-center space-x-3">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        保存
+                    </button>
+                    <span class="text-xs text-gray-500">
+                        空欄で保存するとメモを削除します。
+                    </span>
+                </div>
+            </form>
+        </div>
+
+        <!-- 内訳 -->
+        <div class="bg-gray-50 rounded-lg p-6">
+            <h4 class="text-lg font-semibold mb-4 text-gray-800">計算式</h4>
+            <div class="space-y-2 text-sm text-gray-700">
+                <div>
+                    <strong>手取り収入合計:</strong> 給与手取り + 賞与手取り
+                </div>
+                <div>
+                    <strong>固定費合計:</strong> 当月時点で有効な固定費の合計
+                </div>
+                <div>
+                    <strong>変動費合計:</strong> カード変動費 + 現金支出
+                </div>
+                <div>
+                    <strong>カード変動費:</strong> カード請求総額 - カードに含まれる固定費
+                </div>
+                <div>
+                    <strong>現金支出:</strong> 月初現金 + 引出合計 - 次月月初現金
+                </div>
+                <div>
+                    <strong>損益:</strong> 手取り収入合計 - 固定費合計 - 変動費合計
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 rounded-lg p-6 text-center">
+        <p class="text-gray-500">データが登録されていません。</p>
+    </div>
+    {% endif %}
+</div>
