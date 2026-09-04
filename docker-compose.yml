@@ -7,5 +7,10 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - sqlite_data:/data
     environment:
       - NODE_ENV=development
+      - DB_FILE=/data/data.sqlite
+
+volumes:
+  sqlite_data:

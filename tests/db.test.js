@@ -30,5 +30,18 @@ assert.strictEqual(incUpdated.amount, 2500, 'Income amount should be updated');
 dbModule.deleteIncome(incUpdated.id);
 assert.strictEqual(dbModule.getIncomes().length, 0, 'Income should be deleted');
 
+const fixedExpenseItemId = dbModule.addFixedExpenseItem(30000, '家賃', '2024-01');
+const insertedRowIds = dbModule.applyFixedExpensesForMonth('2024-03');
+assert.strictEqual(insertedRowIds.length, 1, 'A fixed expense should be applied once');
+const marchFixedExpenses = dbModule.getExpenses().filter((expense) => expense.target_month === '2024-03');
+assert.strictEqual(marchFixedExpenses.length, 1, 'A fixed expense should exist for the target month');
+
+const duplicatedInsertIds = dbModule.applyFixedExpensesForMonth('2024-03');
+assert.strictEqual(duplicatedInsertIds.length, 0, 'Fixed expense application should be idempotent');
+
+dbModule.endFixedExpenseItem(fixedExpenseItemId, '2024-04');
+const aprilInsertIds = dbModule.applyFixedExpensesForMonth('2024-04');
+assert.strictEqual(aprilInsertIds.length, 0, 'Ended fixed expense should not apply from the end month');
+
 fs.unlinkSync(tmpFile);
 console.log('SQLite tests passed');

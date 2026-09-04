@@ -11,7 +11,10 @@ import {
   updateIncome,
   updateExpense,
   deleteExpense,
-  deleteIncome
+  deleteIncome,
+  addFixedExpenseItem,
+  endFixedExpenseItem,
+  applyFixedExpensesForMonth
 } from './db.js';
 import {
   registerCashStart,
@@ -32,7 +35,12 @@ const frontendDir = path.join(__dirname, 'frontend');
 const port = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-  if (req.url === '/expenses' && req.method === 'GET') {
+  const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  if (requestUrl.pathname === '/expenses' && req.method === 'GET') {
+    const targetMonth = requestUrl.searchParams.get('month');
+    if (targetMonth) {
+      applyFixedExpensesForMonth(targetMonth);
+    }
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(getExpenses()));
     return;
@@ -127,6 +135,31 @@ const server = http.createServer((req, res) => {
     deleteIncome(id);
     res.statusCode = 204;
     res.end();
+    return;
+  }
+
+  if (requestUrl.pathname === '/fixed-expenses' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const data = JSON.parse(body || '{}');
+      addFixedExpenseItem(Number(data.amount), data.description || '', data.startMonth);
+      res.statusCode = 201;
+      res.end('OK');
+    });
+    return;
+  }
+
+  if (requestUrl.pathname.startsWith('/fixed-expenses/') && req.method === 'PUT') {
+    const id = Number(requestUrl.pathname.split('/')[2]);
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      const data = JSON.parse(body || '{}');
+      endFixedExpenseItem(id, data.endMonth);
+      res.statusCode = 200;
+      res.end('OK');
+    });
     return;
   }
 
